@@ -30,16 +30,18 @@ Configure the context of the cli by selecting the tenant and setting the
 base url.
 
  Options:
-  -t, --tenant            The tenant id to use, ex iplantc.org
+  -t, --tenant            The tenant id to use, ex agave.prod. This will overridden the
+                          value of AGAVE_TENANT in your environment. 
   -b, --backup            Backup the previous config before setting the new one.
                           The current config will be stored as $AGAVE_CACHE_DIR/backup
   -r, --restore           Sets the backed up config as current config and deletes the backup
   -s, --swap              Swaps the current and backup configs, preserving both
-  -d, --developmenturl    The development tenant, ex https://agave-dev.iplantc.org
+  -d, --developmenturl    The development tenant, ex https://sandbox.example.com
   -f, --force             Skip all user interaction
   -i, --interactive       Prompt for values
   -q, --quiet             Quiet (no output)
-  -v, --verbose           Verbose output
+  -v, --verbose        Verbose output
+  -V, --veryverbose    Very verbose output
   -h, --help              Display this help and exit
       --version           Output version information and exit
 "
@@ -93,9 +95,25 @@ main() {
     exit
 
   else
+    
+    # fetch tenant list from discovery service
+    cmd="curl -sk ${hosturl%/}?pretty=true&limit=1000"
+        
+    if ((veryverbose)); then
+        [ "$piped" -eq 0 ] && log "Calling $cmd"
+    fi
 
-    tenantresponse=$(curl -sk ${hosturl%/}/)
-
+    tenantresponse=`curl -sk "${hosturl%/}?pretty=true&limit=1000"`
+    
+    if ((veryverbose)); then
+        echo "$tenantresponse"
+    elif ((verbose)); then
+        echo $(jsonquery "$tenantresponse" "result.[].code")
+    fi
+    		
+    # set default tenant in case none is present in the environment
+    DEFAULT_TENANT_ID=agave.prod
+        
     oldIFS="$IFS"
     #tenantids=$(jsonquery "${tenantresponse}" "result.[].tenantId")
     IFS='
@@ -104,34 +122,40 @@ main() {
     tenantids=( $(jsonquery "${tenantresponse}" "result.[].code") )
     tenanturls=( $(jsonquery "${tenantresponse}" "result.[].baseUrl") )
     IFS="$oldIFS"
-
-    #tenanturls=$(jsonquery "${tenantresponse}" "result.[].baseUrl")
-    #IFS=', ' read -a tenanturls <<< ${tenanturls[@]}
-
+            
+    re='^[0-9]+$'
+        
     if [ -z "$tenant" ]; then
-
-      echo "Please select a tenant from the following list:"
-      for i in "${!tenantids[@]}"
-      do
-        echo "[$i] ${tenantids[$i]}"
-        if [[ "${tenantids[$i]}" == 'iplantc.org' ]]; then
-          tenantid=$i
+      
+      if ((force)); then
+        if [[ -n "$DEFAULT_TENANT_ID" ]]; then
+          tenant="$DEFAULT_TENANT_ID"
         fi
-      done
-
-      echo -n "Your choice [$tenantid]: "
-      eval "read tenant"
-
-      # use the default tenant id
-      if [[ -z "$tenant" ]]; then
-        tenant="iplantc.org"
+      else 
+        echo "Please select a tenant from the following list:"
+        for i in "${!tenantids[@]}"
+        do
+          echo "[$i] ${tenantids[$i]}"
+          if [[ "${tenantids[$i]}" == "$DEFAULT_TENANT_ID" ]]; then
+            tenantid=$i
+          fi
+        done
+          
+          
+        echo -n "Your choice [$tenantid]: "
+        eval "read tenant"
+      
+        # use the default tenant id
+        if [[ -z "$tenant" ]]; then
+          tenant="$DEFAULT_TENANT_ID"
+        fi
       fi
+              
     fi
 
-    re='^[0-9]+$'
     if [[ "$tenant" =~ $re ]] ; then
       if [ $tenant -ge ${#tenantids[@]} ]; then
-        err "Invalid choice. Please select a valid number from 1-${#tenantids[@]} or provide a valid tenant id (ie. iplantc.org)";
+        err "Invalid choice. Please select a valid number from 1-${#tenantids[@]} or provide a valid tenant id (ie. "$DEFAULT_TENANT_ID")";
         exit
       else
         tenant="${tenantids[$tenant]}"
@@ -150,7 +174,7 @@ main() {
   done
 
   if [ -z "$tenantid" ]; then
-    err "Unknown tenant id. Please provide a valid tenant id to initialize the cli."
+    err "Unknown tenant id $tenant. Please provide a valid tenant id to initialize the cli."
     exit
   fi
 
@@ -207,6 +231,7 @@ while [[ $1 = -?* ]]; do
     -s|--swap) swap=1 ;;
     -d|--developmenturl) shift; developmenturl=$1 ;;
     -v|--verbose) verbose=1 ;;
+    -V|--veryverbose) veryverbose=1; verbose=1 ;;
     -q|--quiet) quiet=1 ;;
     -i|--interactive) interactive=1 ;;
     -f|--force) force=1 ;;
@@ -216,6 +241,10 @@ while [[ $1 = -?* ]]; do
   shift
 done
 
+if [[ -z "$tenant" ]] && [[ -n "$AGAVE_TENANT" ]]; then
+    tenant="$AGAVE_TENANT"
+fi
+      
 # Store the remaining part as arguments.
 args+=("$@")
 

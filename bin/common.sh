@@ -99,7 +99,7 @@ function out() {
   if (( pipe )); then
   	echo "$@"
   else
-  	printf '%b\n' "$message";
+  	printf "%b\n" "$message";
   fi
 }
 function die() { out "$@"; exit 1; } >&2
@@ -111,7 +111,7 @@ function err() {
 		response=$(get_xml_message "$1")
 		response=`json_prettyify $(to_json_error_message "$response")`
 	else
-		response=$@
+		response="$@"
 	fi
 
 	if (($verbose)); then
@@ -140,7 +140,7 @@ function success() {
 }
 
 function version() {
-	out "iPlant Agave API ${release}
+	out "Agave Platform ${release}
 Agave CLI (revision ${revision})
 "
 }
@@ -177,7 +177,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 }
 
 function disclaimer() {
-	out "Documentation on the Agave API, client libaries, and developer tools is
+	out "Documentation on the Agave Platform, client libaries, and developer tools are
 available online from the Agave Website, http://developer.agaveapi.co. For
 localized help of the various CLI commands, run any command with the -h
 or --help option.
@@ -189,6 +189,20 @@ function log() { (($verbose)) && out "$@"; }
 
 # Notify on function success
 function notify() { [[ $? == 0 ]] && success "$@" || err "$@"; }
+
+# prints warning informing client keys are missing
+function error_no_client() {
+    err 'No client keys found. You may provide your client keys in one of 3 ways:
+
+    1. Add your client key and client secret to your session cache using the auth-switch command.
+    2. Add them as arguments to this command using the -k/--apikey and -s/--apisecret options. 
+    3. Define them in your environment as AGAVE_CLIENT_KEY and AGAVE_CLIENT_SECRET.
+ 
+If you have not yet generated a set of client keys, you can do so using the clients-create command.
+
+    clients-create --apiusername $AGAVE_USERNAME --apipassword $AGAVE_PASSWORD --storeclient
+'   
+}
 
 # Escape a string
 function escape() { echo $@ | sed 's/\//\\\//g'; }
@@ -271,6 +285,10 @@ function to_json_error_message() {
 #	response=`echo "$jsonresponsemessage" | python -mjson.tool`
 
 
+}
+
+function variable_with_name_exists_but_empty() {
+    [[ -z $$1 && ${$1+x}  ]] && echo 1
 }
 
 function trim() {
@@ -522,24 +540,29 @@ function prompt_options() {
     [[ ! "$desc" ]] && continue
 
 	#echo -n "$desc: "
-
+	
 	# In case this is a password field, hide the user input
     if [[ $val == "apikey" ]]; then
-    	jsonval savedapikey "${tokenstore}" "apikey"
-      if [[ -n "$force" ]]; then
-        apikey=$savedapikey
-      else
-  	    echo -n "API key [$savedapikey]: "
-      	eval "read $val"
-      	if  [[ -z $apikey ]]; then
-      		apikey=$savedapikey
-      	fi
-      	#stty -echo; read apikey; stty echo
-      	#echo
-      fi
+        if [[ -n "$AGAVE_CLIENT_KEY" ]]; then 
+            savedapikey="$AGAVE_CLIENT_KEY"
+        else
+            jsonval savedapikey "${tokenstore}" "apikey"
+        fi
+        
+        if [[ -n "$savedapikey" ]]; then
+            apikey=$savedapikey
+        else
+        
+            echo -n "API key [$savedapikey]: "
+            eval "read $val"
+            if  [[ -z $apikey ]]; then
+                apikey=$savedapikey
+            fi
+        fi
     elif [[ $val == "refresh_token" ]]; then
-    	jsonval savedrefreshtoken "${tokenstore}" "refresh_token"
-      if [[ -n "$force" ]]; then
+      jsonval savedrefreshtoken "${tokenstore}" "refresh_token"
+      
+      if ((force)) || [[ -n "$savedrefreshtoken" ]]; then
         refresh_token=$savedrefreshtoken
       else
         echo -n "Refresh token [$savedrefreshtoken]: "
@@ -551,8 +574,13 @@ function prompt_options() {
       	#echo
       fi
     elif [[ $val == "apisecret" ]]; then
-    	jsonval savedapisecret "${tokenstore}" "apisecret"
-      if [[ -n "$force" ]]; then
+      if [[ -n "$AGAVE_CLIENT_SECRET" ]]; then 
+        savedapisecret="$AGAVE_CLIENT_SECRET"
+      else
+        jsonval savedapisecret "${tokenstore}" "apisecret"
+      fi
+      
+      if [[ -n "$savedapisecret" ]]; then
         apisecret=$savedapisecret
       else
   		  echo -n "API secret [$savedapisecret]: "
@@ -562,38 +590,77 @@ function prompt_options() {
       	fi
       fi
     elif [[ $val == "username" ]]; then
-    	jsonval savedusername "${tokenstore}" "username"
-		  if [[ -n "$force" ]]; then
+      if [[ -n "$AGAVE_USERNAME" ]]; then 
+        savedusername="$AGAVE_USERNAME"
+      else
+        jsonval savedusername "${tokenstore}" "username"
+      fi
+      
+      # username option is required, but not explicitly provided
+      # If it exists in the environment, use it and skip the prompt 
+      # environment
+	  if ((force)); then
         username=$savedusername
       else
         echo -n "API username [$savedusername]: "
       	eval "read $val"
       	if  [[ -z $username ]]; then
-        		username=$savedusername
+        	username=$savedusername
       	fi
       fi
+    elif [[ $val == "apiusername" ]]; then
+      if [[ -n "$AGAVE_USERNAME" ]]; then 
+        savedusername="$AGAVE_USERNAME"
+      else
+        jsonval savedusername "${tokenstore}" "username"
+      fi
+      
+      # api username option is required, but not explicitly provided
+      # If it exists in the environment, use it and skip the prompt 
+      # environment
+      if [[ -n "$savedusername" ]]; then
+        apiusername=$savedusername
+      else
+        echo -n "API username [$savedusername]: "
+        eval "read $val"
+        if  [[ -z $username ]]; then
+            apiusername=$savedusername
+        fi
+      fi
     elif [[ $val == "password" ]]; then
-    	echo -n "API password: "
-    	stty -echo; read "password"; stty echo
-    	echo -n "
+      if ((force)) || [[ -n "$AGAVE_PASSWORD" ]]; then  
+        password="$AGAVE_PASSWORD"
+      else   
+        echo -n "API password: "
+        stty -echo; read "password"; stty echo
+        echo -n "
 ";
+      fi
     elif [[ $val == "apipassword" ]]; then
-    	echo -n "API password: "
-    	stty -echo; read "apipassword"; stty echo
-    	echo -n "
+      if ((force)) || [[ -n "$AGAVE_PASSWORD" ]]; then 
+          apipassword="$AGAVE_PASSWORD"
+      else
+        echo -n "API password: "
+        stty -echo; read "apipassword"; stty echo
+        echo -n "
 ";
+      fi
 	# Otherwise just read the input
     else
-    	echo -n "$desc: "
-		eval "read $val"
+      echo -n "$desc: "
+	  eval "read $val"
     fi
   done
 }
 
 function get_auth_header() {
 	if [[ "$development" -ne 1 ]]; then
-		echo "Authorization: Bearer $access_token"
-	else
+        if [[ -n "$AGAVE_ACCESS_TOKEN" ]]; then
+            echo "Authorization: Bearer $AGAVE_ACCESS_TOKEN"
+        else
+            echo "Authorization: Bearer $access_token"
+        fi
+    else
 		if [[ -f "$DIR/auth-filter.sh" ]]; then
 		  echo $(source $DIR/auth-filter.sh);
 		else
@@ -709,7 +776,7 @@ function json_prettyify {
 function auto_auth_refresh
 {
 	AGAVE_DISABLE_AUTO_REFRESH=1
-	if [[ -z "$AGAVE_DISABLE_AUTO_REFRESH" ]];
+	if [[ -z "$AGAVE_ACCESS_TOKEN" ]] && [[ -z "$AGAVE_DISABLE_AUTO_REFRESH" ]];
 	then
 		# ignore the refresh if the api keys or refresh token are not present in the cache.
 		if [[ -n "$baseurl" ]] && [[ -n "$apikey" ]] && [[ -n "$apisecret" ]] && [[ -n "$refresh_token" ]];

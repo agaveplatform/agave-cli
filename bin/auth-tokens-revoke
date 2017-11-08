@@ -39,8 +39,8 @@ Note that you must use the same client key and secret that was used
 to obtain the auth token to revoke it.
 
  Options:
-  -s, --apisecret      Consumer secret
-  -k, --apikey         Consumer Key
+  -s, --apisecret      Client api secret. This will override the value of AGAVE_CLIENT_SECRET in your environment.
+  -k, --apikey         Client api key. This will override the value of AGAVE_CLIENT_KEY in your environment.
   -S, --storetoken     Removes the revoked credential from the local cache
   -D, --displayonly    Display the fetched auth credentials, but do not save. The local auth cache
                        will not be updated
@@ -67,38 +67,45 @@ source "$DIR/auth-common.sh"
 main() {
 	#echo -n
 
-	hosturl=${hosturl%/}/revoke
+    if [[ -z "$apikey" ]] || [[ -z "$apisecret" ]]; then
 
-	# invalidate the access token given as an argument
-	# if present, otherwise use the token from the
-	# user's auth cache.
-	if [[ -z "$args" ]]; then
-		token_to_revoke="$access_token"
-	else
-		token_to_revoke="$args"
-	fi
+        error_no_client
+
+    else
+
+        hosturl=${hosturl%/}/revoke
+
+        # invalidate the access token given as an argument
+        # if present, otherwise use the token from the
+        # user's auth cache.
+        if [[ -z "$args" ]]; then
+            token_to_revoke="$access_token"
+        else
+            token_to_revoke="$args"
+        fi
 
 
-  if [[ -z "$token_to_revoke" ]]; then
-    err "No token found in the current environment cache. Please provide a valid access token to revoke"
-  fi
+        if [[ -z "$token_to_revoke" ]]; then
+            err "No token found in the current environment cache. Please provide a valid access token to revoke"
+        fi
 
-	cmd="curl -sku \"$apikey:$apisecret\" -X POST -d 'token=$token_to_revoke' '$hosturl'"
+        cmd="curl -sku \"$apikey:$apisecret\" -X POST -d 'token=$token_to_revoke' '$hosturl'"
 
-	if ((veryverbose)); then
-		[ "$piped" -eq 0 ] && log "Calling $cmd"
-	fi
+        if ((veryverbose)); then
+            [ "$piped" -eq 0 ] && log "Calling $cmd"
+        fi
 
-	response=`curl -sku "$apikey:$apisecret" -X POST -d "token=$token_to_revoke" "$hosturl"`
+        response=`curl -sku "$apikey:$apisecret" -X POST -d "token=$token_to_revoke" "$hosturl"`
 
-  if [[ -n "$response" ]]; then
-    response=$(json_prettyify "$response")
-		err "{\"status\":\"error\",\"message\":\"$(jsonquery "$response" "error_description")\",\"result\": null}"
-	else
-    response="{\"status\":\"success\",\"message\":\"\",\"result\": null}"
-		result=$(format_api_json "$response")
-		success "$result"
-	fi
+        if [[ -n "$response" ]]; then
+            response=$(json_prettyify "$response")
+            err "{\"status\":\"error\",\"message\":\"$(jsonquery "$response" "error_description")\",\"result\": null}"
+        else
+            response="{\"status\":\"success\",\"message\":\"\",\"result\": null}"
+            result=$(format_api_json "$response")
+            success "$result"
+        fi
+    fi
 }
 
 format_api_json() {
@@ -114,7 +121,7 @@ format_api_json() {
 	elif [[ $verbose -eq 1 ]]; then
 		json_prettyify "${1}"
 	else
-		echo "Token $token_to_revoke successfully revoked";
+		echo "Token for ${tenantid}:${username} successfully revoked";
 	fi
 }
 

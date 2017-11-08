@@ -81,8 +81,6 @@ main() {
 
 format_api_json() {
 
-	jsonval storedtoken "${tokenstore}" "apikey"
-
 	if ((veryverbose)); then
 		echo "$1"
 	elif [[ $verbose -eq 1 ]]; then

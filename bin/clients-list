@@ -27,8 +27,8 @@ $(basename $0) [OPTION]... [CLIENT_NAME]
 List all API clients registered to the authenticated user.
 
  Options:
-  -u, --apiusername    API apiusername
-  -p, --apipassword    API apipassword
+  -u, --apiusername    Agave tenant username. This will override the value of AGAVE_USERNAME in your environment.
+  -p, --apipassword    Agave tenant password. This will override the value of AGAVE_PASSWORD in your environment.
   -l, --limit          Maximum number of results to return
   -o, --offset         Number of results to skip from the start
   -H, --hosturl        URL of the service

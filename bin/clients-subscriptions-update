@@ -26,8 +26,8 @@ usage() {
 Subscribe a client to one or all apis.
 
  Options:
-  -u, --apiusername    API username
-  -p, --apipassword    API password
+  -u, --apiusername    Agave tenant username. This will override the value of AGAVE_USERNAME in your environment.
+  -p, --apipassword    Agave tenant password. This will override the value of AGAVE_PASSWORD in your environment.
   -N, --apiName        The name of the API to subscribe the client application to.
                        Use a wildcard to subscribe to all APIs
   -T, --tier           The subscription tier
@@ -57,7 +57,12 @@ main() {
 	#echo -n
 	#set -x
 
-	if [ -z "$args" ]; then
+    client_name="$args"
+    if [ -z "$client_name" ]; then
+        client_name="${cached_client}"
+    fi
+
+	if [ -z "$client_name" ]; then
 		err "Please specify a valid client name"
 	else
 
@@ -69,13 +74,13 @@ main() {
 			tier='Unlimited'
 		fi
 
-		cmd="curl -sku \"${apiusername}:xxxx\" -X POST -d \"apiName=${apiName}&tier=${tier}&apiVersion=${apiVersion}&apiProvider=${apiProvider}\" '${hosturl}${args}/subscriptions?pretty=true'"
+		cmd="curl -sku \"${apiusername}:xxxx\" -X POST -d \"apiName=${apiName}&tier=${tier}&apiVersion=${apiVersion}&apiProvider=${apiProvider}\" '${hosturl}${client_name}/subscriptions?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-		response=`curl -sku "${apiusername}:${apipassword}" -X POST -d "apiName=${apiName}&tier=${tier}&apiVersion=${apiVersion}&apiProvider=${apiProvider}" "${hosturl}${args}/subscriptions?pretty=true"`
+		response=`curl -sku "${apiusername}:${apipassword}" -X POST -d "apiName=${apiName}&tier=${tier}&apiVersion=${apiVersion}&apiProvider=${apiProvider}" "${hosturl}${client_name}/subscriptions?pretty=true"`
 
 		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 			result=$(format_api_json "$response")

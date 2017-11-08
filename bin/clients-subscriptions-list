@@ -26,8 +26,8 @@ usage() {
 List all APIs to which the client is subscribed.
 
  Options:
-  -u, --apiusername    API apiusername
-  -p, --apipassword    API apipassword
+  -u, --apiusername    Agave tenant username. This will override the value of AGAVE_USERNAME in your environment.
+  -p, --apipassword    Agave tenant password. This will override the value of AGAVE_PASSWORD in your environment.
   -l, --limit          Maximum number of results to return
   -o, --offset         Number of results to skip from the start
   -H, --hosturl        URL of the service
@@ -53,17 +53,25 @@ source "$DIR/clients-common.sh"
 main() {
 	#echo -n
 	#set -x
+	
+	# get current client for use after success
+    jsonval cached_client "$(kvget current)" "client_name"
+    
+    client_name="$args"
+    if [ -z "$client_name" ]; then
+        client_name="${cached_client}"
+    fi
 
-	if [ -z "$args" ]; then
+	if [ -z "$client_name" ]; then
 		err "Please specify a valid client for which to list subscriptions"
 	else
-		cmd="curl -sku \"${apiusername}:${apipassword}\" '${hosturl}${args}/subscriptions?pretty=true$(pagination)'"
+		cmd="curl -sku \"${apiusername}:${apipassword}\" '${hosturl}${client_name}/subscriptions?pretty=true$(pagination)'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-		response=`curl -sku "${apiusername}:${apipassword}" "${hosturl}${args}/subscriptions?pretty=true$(pagination)"`
+		response=`curl -sku "${apiusername}:${apipassword}" "${hosturl}${client_name}/subscriptions?pretty=true$(pagination)"`
 
 		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 			result=$(format_api_json "$response")

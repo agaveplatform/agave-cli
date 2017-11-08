@@ -191,7 +191,7 @@ format_api_json() {
 	else
 		if [ -z "$args" ]; then
 			internal_username=$(jsonquery "$1" "result.username")
-			echo "Successfully added user $username."
+			echo "Successfully added user $internal_username."
 		else
 			echo "Successfully updated user $account_username"
 		fi

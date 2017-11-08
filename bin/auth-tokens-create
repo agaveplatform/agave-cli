@@ -22,7 +22,7 @@ storetoken=1
 
 # A list of all variables to prompt in interactive mode. These variables HAVE
 # to be named exactly as the longname option definition in usage().
-interactive_opts=(apisecret apikey username password)
+interactive_opts=(apisecret apikey apiusername apipassword)
 
 # Print usage
 usage() {
@@ -37,10 +37,10 @@ For ease of use, the -S option can be specified to store the new
 credential for reuse in subsequent calls to the API.
 
  Options:
-  -u, --username       Agave tenant username
-  -p, --password       Agave tenant password
-  -s, --apisecret      Consumer secret
-  -k, --apikey         Consumer Key
+  -u, --apiusername    Agave tenant username. This will override the value of AGAVE_USERNAME in your environment.
+  -p, --apipassword    Agave tenant password. This will override the value of AGAVE_PASSWORD in your environment.
+  -s, --apisecret      Client api secret. This will override the value of AGAVE_CLIENT_SECRET in your environment.
+  -k, --apikey         Client api key. This will override the value of AGAVE_CLIENT_KEY in your environment.
   -x, --tokenuser      API username for whom the returned token should apply, requires admin permissions
   -S, --storetoken     Store the token for later use so you can work without reauthenticating on
                        every command. This is the default behavior
@@ -71,28 +71,36 @@ main() {
 	#set -x
 	hosturl=${hosturl%/}/token
 
-	if [ -n "$tokenuser" ]; then
-		authUsername=$username
-		username=$tokenuser
-
-		cmd="curl -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"token_username=${tokenuser}\" --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${password}\" --data-urlencode \"grant_type=admin_password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
+	if [[ -z "$apikey" ]] || [[ -z "$apisecret" ]]; then 
+        
+        error_no_client
+    
+    elif [ -n "$tokenuser" ]; then
+		
+		# the request is for an impersonation token. We separate the authenticating user from the impersonated user
+		authUsername=$apiusername
+		apiusername=$tokenuser
+        
+        cmd="curl -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"token_username=${apiusername}\" --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${apipassword}\" --data-urlencode \"grant_type=admin_password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-		response=`json_prettyify $(curl -sku "$apikey:$apisecret" -X POST --data-urlencode "token_username=${tokenuser}" --data-urlencode "username=${authUsername}" --data-urlencode "password=${password}" --data-urlencode "grant_type=admin_password" --data-urlencode "scope=PRODUCTION" "$hosturl")`
+		response=`json_prettyify $(curl -sku "$apikey:$apisecret" -X POST --data-urlencode "token_username=${apiusername}" --data-urlencode "username=${authUsername}" --data-urlencode "password=${apipassword}" --data-urlencode "grant_type=admin_password" --data-urlencode "scope=PRODUCTION" "$hosturl")`
 
 	else
-		authUsername=$username
+		
+		# standard auth request
+		authUsername=$apiusername
 
-		cmd="curl -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${password}\" --data-urlencode \"grant_type=password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
+		cmd="curl -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${apipassword}\" --data-urlencode \"grant_type=password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-		response=`json_prettyify $(curl -sku "$apikey:$apisecret" -X POST --data-urlencode "username=${authUsername}" --data-urlencode "password=${password}" --data-urlencode "grant_type=password" --data-urlencode "scope=PRODUCTION" "$hosturl")`
+		response=`json_prettyify $(curl -sku "$apikey:$apisecret" -X POST --data-urlencode "username=${authUsername}" --data-urlencode "password=${apipassword}" --data-urlencode "grant_type=password" --data-urlencode "scope=PRODUCTION" "$hosturl")`
 
 	fi
 
@@ -111,7 +119,8 @@ format_api_json() {
 		jsonval access_token "$1" "access_token"
 		jsonval refresh_token "$1" "refresh_token"
 		jsonval expires_in "$1" "expires_in"
-
+        jsonval client_name "$(kvget current)" "client_name"
+        
 		created_at=$(date +%s)
 
 		if date --version >/dev/null 2>&1 ; then
@@ -120,9 +129,9 @@ format_api_json() {
 		  expires_at=`date -r $(expr $created_at + $expires_in)`
 		fi
 
-		kvset current "{\"tenantid\":\"$tenantid\",\"baseurl\":\"$baseurl\",\"devurl\":\"$devurl\",\"apisecret\":\"$apisecret\",\"apikey\":\"$apikey\",\"username\":\"$username\",\"access_token\":\"$access_token\",\"refresh_token\":\"$refresh_token\",\"created_at\":\"$created_at\",\"expires_in\":\"$expires_in\",\"expires_at\":\"$expires_at\"}"
+		kvset current "{\"tenantid\":\"$tenantid\",\"baseurl\":\"$baseurl\",\"devurl\":\"$devurl\",\"apisecret\":\"$apisecret\",\"apikey\":\"$apikey\",\"username\":\"$apiusername\",\"access_token\":\"$access_token\",\"refresh_token\":\"$refresh_token\",\"created_at\":\"$created_at\",\"expires_in\":\"$expires_in\",\"expires_at\":\"$expires_at\",\"client_name\":\"$client_name\"}"
 
-		echo "Token for ${tenantid}:${username} successfully refreshed and cached for ${expires_in} seconds";
+		echo "Token for ${tenantid}:${apiusername} successfully refreshed and cached for ${expires_in} seconds";
 	fi
 
 	if ((veryverbose)); then
@@ -157,8 +166,8 @@ while [[ $1 = -?* ]]; do
   case $1 in
     -h|--help) usage >&2; safe_exit ;;
     --version) version; copyright; disclaimer; safe_exit ;;
-    -u|--username) shift; username=$1 ;;
-  	-p|--password) shift; password=$1 ;;
+    -u|--apiusername) shift; apiusername=$1 ;;
+  	-p|--apipassword) shift; apipassword=$1 ;;
     -s|--apisecret) shift; apisecret=$1 ;;
     -k|--apikey) shift; apikey=$1 ;;
     -x|--tokenuser) shift; tokenuser=$1;;
@@ -184,15 +193,3 @@ args+=("$@")
 
 # Run the script logic
 source "$DIR/runner.sh"
-
-
-#		print_options='-d "grant_type=admin_password" -d "username='$proxyuser'" -d "scope=PRODUCTION" -d "adminPassword=XXXXX"'
-#		post_options='--data-urlencode  "grant_type=admin_password" --data-urlencode  "username='$proxyuser'" --data-urlencode  "scope=PRODUCTION" --data-urlencode  "adminPassword='$password'"'
-#		cmd="curl -sku \"$apikey:XXXXX\" -X POST --data-binary '$print_options' '$hosturl'"
-#	else
-#		print_options='{ "password": "admin_password", "username": "'$username'", "scope": "PRODUCTION", "password": "XXXXX"}'
-#		post_options='{ "password": "admin_password", "username": "'$username'", "scope": "PRODUCTION", "password": "'$password'"}'
-#		cmd="curl -sku \"$apikey:XXXXX\" -X POST --data-binary '$print_options' '$hosturl'"
-#	fi
-
-#	cmd="curl -sku \"$apikey:XXXXX\" -X POST --data-binary '$print_options' '$hosturl'"

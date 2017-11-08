@@ -29,8 +29,8 @@ usage() {
 Deletes a client application and associated API keys.
 
  Options:
-  -u, --apiusername    API apiusername
-  -p, --apipassword    API apipassword
+  -u, --apiusername    Agave tenant username. This will override the value of AGAVE_USERNAME in your environment.
+  -p, --apipassword    Agave tenant password. This will override the value of AGAVE_PASSWORD in your environment.
   -H, --hosturl        URL of the service
   -d, --development    Run in dev mode using default dev server
   -f, --force          Skip all user interaction
@@ -54,18 +54,26 @@ source "$DIR/clients-common.sh"
 main() {
 	#echo -n
 	#set -x
-
-	if [ -z "$args" ]; then
+	
+	# get current client for use after success
+	jsonval cached_client "$(kvget current)" "client_name"
+	
+    client_name="$args"
+	if [ -z "$client_name" ]; then
+	    client_name="${cached_client}"
+    fi
+    
+    if [ -z "$client_name" ]; then    
 		err "Please specify a valid client to delete"
 	else
 
-		cmd="curl -sku \"${apiusername}:xxxx\" -X DELETE '$hosturl$args?pretty=true'"
+		cmd="curl -sku \"${apiusername}:xxxx\" -X DELETE '${hosturl}${client_name}?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-		response=`curl -sku "${apiusername}:${apipassword}" -X DELETE "$hosturl$args?pretty=true"`
+		response=`curl -sku "${apiusername}:${apipassword}" -X DELETE "${hosturl}${client_name}?pretty=true"`
 
 		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 			result=$(format_api_json "$response")
@@ -79,6 +87,13 @@ main() {
 
 format_api_json() {
 
+    # remove the deleted client from the local cache if the name matches 
+    # as it is no longer valid or useful for anything. The current auth
+    # and refresh token may or may not be valid, so we leave them there.
+    if [[ "$client_name" == "$cached_client" ]]; then
+        auth-switch -s "" -k "" -S 2>&1 >> /dev/null
+    fi
+    
 	if ((veryverbose)); then
 		json_prettyify "${1}"
 	elif [[ $verbose -eq 1 ]]; then

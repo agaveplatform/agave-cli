@@ -15,6 +15,7 @@ source "$DIR/common.sh"
 
 # set to 1 to prevent using cache. token creation requires a valid key
 savechanges=0
+disable_cache=1
 
 # Script logic -- TOUCH THIS {{{
 
@@ -34,11 +35,15 @@ in subsequent calls to the API.
   -u, --username        Agave tenant username
   -d, --devurl          URL to the development server
   -b, --baseurl         URL to the production API server
-  -t, --tenantid        Current tenant id. ex. iplantc.org
-  -s, --apisecret       Consumer secret
-  -k, --apikey          Consumer Key
-  -z, --access_token    Current auth token
-  -r, --refresh_token   Current refresh token
+  -t, --tenantid        Current tenant id. ex. agave.prod
+  -s, --apisecret       Client application api secret
+  -k, --apikey          Client application api key
+  -n, --client_name     Client application name
+  -z, --accesstoken     Current auth token
+  -r, --refreshtoken    Current refresh token
+  -l, --expires_in      Token lifetime from last auth request
+  -e, --expires_at      Timestamp when the token expires
+  -c, --created_at      Timestamp when the token was created
   -S, --savechanges     Save the updated value
   -f, --force           Skip all user interaction
   -i, --interactive     Prompt for values
@@ -61,9 +66,8 @@ source "$DIR/auth-common.sh"
 main() {
 	#echo -n
 	#set -x
-	local post_options="grant_type=password&username=${username}&password=${password}&scope=PRODUCTION"
-
-    current_cache=$(kvget current )
+	
+	current_cache=$(kvget current)
 
     if [ -e "$DIR/auth-switch-filter.sh" ]; then
         source $DIR/auth-switch-filter.sh
@@ -74,62 +78,94 @@ main() {
     else
         dev=$(jsonquery "$current_cache" "devurl")
     fi
-
-    if [ -z "$user" ]; then
+    dev=$(trim "$dev")
+    
+    
+    if [[ ! "${user+1}" && -z "$user" ]]; then
         user=$(jsonquery "$current_cache" "username")
     fi
-
-    if [ -z "$tenant" ]; then
+    user=$(trim "$user")
+    
+    
+    if [[ ! "${tenant+z}" && -z "$tenant" ]]; then
         tenant=$(jsonquery "$current_cache" "tenantid")
     fi
-
-    if [ -z "$baseurl" ]; then
+    tenant=$(trim "$tenant")
+    
+    
+    if [[ ! "${baseurl+1}" && -z "$baseurl" ]]; then
         baseurl=$(jsonquery "$current_cache" "baseurl")
     fi
-
-    if [ -z "$apisecret" ]; then
+    baseurl=$(trim "$baseurl")
+    
+    
+    if [[ ! "${apisecret+1}" && -z "$apisecret" ]]; then
         apisecret=$(jsonquery "$current_cache" "apisecret")
     fi
-
-    if [ -z "$apikey" ]; then
+    apisecret=$(trim "$apisecret")
+    
+    
+    if [[ ! "${apikey+z}" && -z "$apikey" ]]; then 
         apikey=$(jsonquery "$current_cache" "apikey")
     fi
-
-    if [ -z "$access_token" ]; then
-        access_token=$(jsonquery "$current_cache" "access_token")
+    apikey=$(trim "$apikey")
+    
+    
+    if [[ ! "${accesstoken+access_1}" && -z "$accesstoken" ]]; then
+        accesstoken=$(jsonquery "$current_cache" "access_token")
     fi
-
-    if [ -z "$refresh_token" ]; then
-        refresh_token=$(jsonquery "$current_cache" "refresh_token")
+    accesstoken=$(trim "$accesstoken")
+    
+    
+    if [[ ! "${refreshtoken+1}" && -z "$refreshtoken" ]]; then
+        refreshtoken=$(jsonquery "$current_cache" "refresh_token")
     fi
-
-    if [ -z "$refresh_token" ]; then
-        refresh_token=$(jsonquery "$current_cache" "refresh_token")
+    refreshtoken=$(trim "$refreshtoken")
+    
+    
+    if [[ ! "${client_name+1}" && -z "$client_name" ]]; then
+        client_name=$(jsonquery "$current_cache" "client_name")
     fi
+    client_name=$(trim "$client_name")
+    
+    
+    if [[ ! "${expires_in+1}" && -z "$expires_in" ]]; then
+        expires_in=$(jsonquery "$current_cache" "expires_in")
+    fi
+    expires_in=$(trim "$expires_in")
+    
+    
+    if [[ ! "${expires_at+1}" && -z "$expires_at" ]]; then
+        expires_at=$(jsonquery "$current_cache" "expires_at")
+    fi
+    expires_at=$(trim "$expires_at")
+    
+    
+    if [[ ! "${created_at+1}" && -z "$created_at" ]]; then
+        created_at=$(jsonquery "$current_cache" "created_at")  
+    fi
+    created_at=$(trim "$created_at")
+    
+    
+    response="{\"tenantid\":\"$tenant\",\"baseurl\":\"${baseurl}\",\"devurl\":\"${dev}\",\"apisecret\":\"$apisecret\",\"apikey\":\"$apikey\",\"username\":\"$user\",\"access_token\":\"$accesstoken\",\"refresh_token\":\"$refreshtoken\",\"created_at\":\"$created_at\",\"expires_in\":\"$expires_in\",\"expires_at\":\"$expires_at\",\"client_name\":\"$client_name\"}"
 
-    expires_in=$(jsonquery "$current_cache" "expires_in")
-
-    expires_at=$(jsonquery "$current_cache" "expires_at")
-
-    created_at=$(jsonquery "$current_cache" "created_at")
-
-    response="{\"tenantid\":\"$tenant\",\"baseurl\":\"${baseurl}\",\"devurl\":\"${dev}\",\"apisecret\":\"$apisecret\",\"apikey\":\"$apikey\",\"username\":\"$user\",\"access_token\":\"$access_token\",\"refresh_token\":\"$refresh_token\",\"created_at\":\"$created_at\",\"expires_in\":\"$expires_in\",\"expires_at\":\"$expires_at\"}"
-
-    result=$(format_api_json "$response")
-
-    success "$result"
+    format_api_json "$response"
 }
 
 format_api_json() {
 
 	if ((savechanges)); then
-
 		kvset current "$1"
-
-		echo "Cache successfully updated and saved to    $AGAVE_CACHE_DIR/current";
 	fi
-
-  json_prettyify "${1}"
+	
+	if ((veryverbose)); then
+	    echo "Cache successfully updated and saved to $AGAVE_CACHE_DIR/current";
+        json_prettyify "${1}"
+    elif ((verbose)); then
+        json_prettyify "${1}"
+    else
+        echo "Cache successfully updated and saved to $AGAVE_CACHE_DIR/current";
+    fi
 }
 
 ##################################################################
@@ -160,8 +196,12 @@ while [[ $1 = -?* ]]; do
     -t|--tenant) shift; tenant=$1 ;;
     -s|--apisecret) shift; apisecret=$1 ;;
     -k|--apikey) shift; apikey=$1 ;;
-    -z|--access_token) shift; access_token=$1 ;;
-    -r|--refresh_token) shift; refresh_token=$1 ;;
+    -n|--client_name) shift; client_name=$1 ;;
+    -z|--accesstoken) shift; accesstoken=$1 ;;
+    -r|--refreshtoken) shift; refreshtoken=$1 ;;
+    -l|--expires_in) shift; expires_in=$1 ;;
+    -e|--expires_at) shift; expires_at=$1 ;;
+    -c|--created_at) shift; created_at=$1 ;;
     -S|--savechanges) savechanges=1 ;;
     -v|--verbose) verbose=1 ;;
     -V|--veryverbose) veryverbose=1; verbose=1 ;;
