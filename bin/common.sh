@@ -36,7 +36,7 @@ fi
 
 # versioning info
 version="v2"
-release="2.1.10"
+release="2.2.11"
 revision=""
 if [ -e "$DIR/../.git" ];
 then
