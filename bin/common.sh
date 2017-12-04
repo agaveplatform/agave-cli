@@ -770,13 +770,12 @@ function json_prettyify {
 
 #
 # Refresh the current user token cached in $AGAVE_CACHE_DIR/current. This function can be
-# disabled at any time by setting the $AGAVE_DISABLE_AUTO_REFRESH environment variable.
+# enabled at any time by setting the $AGAVE_ENABLE_AUTO_REFRESH environment variable.
 # Refresh will be skipped silently if the client key, secret, or refresh token are missing.
 #
 function auto_auth_refresh
 {
-	AGAVE_DISABLE_AUTO_REFRESH=1
-	if [[ -z "$AGAVE_ACCESS_TOKEN" ]] && [[ -z "$AGAVE_DISABLE_AUTO_REFRESH" ]];
+	if [[ -z "$AGAVE_ACCESS_TOKEN" ]] && [[ -n "$AGAVE_ENABLE_AUTO_REFRESH" ]];
 	then
 		# ignore the refresh if the api keys or refresh token are not present in the cache.
 		if [[ -n "$baseurl" ]] && [[ -n "$apikey" ]] && [[ -n "$apisecret" ]] && [[ -n "$refresh_token" ]];
