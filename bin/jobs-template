@@ -302,7 +302,7 @@ main() {
       [ "$piped" -eq 0 ] && log "Parsing app parameters..."
     fi
     parameter_ids=(`jsonquery "$app_description" "parameters.[].id"`)
-    parameter_defaults=(`jsonquery "$app_description" "parameters.[].value.default"`)
+    parameter_defaults=(`jsonquery "$app_description" "parameters.[].value.default" 1`)
     parameter_requireds=(`jsonquery "$app_description" "parameters.[].value.required"`)
     parameter_visibles=(`jsonquery "$app_description" "parameters.[].value.visible"`)
     parameter_types=(`jsonquery "$app_description" "parameters.[].value.type"`)
@@ -324,7 +324,6 @@ main() {
       if [[ "${parameter_visibles[$n]}" == "rue" ]] || [[ "${parameter_visibles[$n]}" == "true" ]]; then
         if [[ "${parameter_requireds[$n]}" == "rue" ]] || [[ "${parameter_requireds[$n]}" == "true" ]] || [[ "$allfields" == 1 ]]; then
           if [[ "${parameter_defaults[$n]}" == "null" ]]; then
-
 
             # strip the array of objects to a list of strings
             tmpEnums=''
@@ -379,24 +378,6 @@ main() {
               parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "$tmpDefaults" "$trailingcomma")
             fi
 
-            # if [[ "${parameter_types[$n]}" == "string" ]]; then
-            #   parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "$tmpDefaults" "$trailingcomma")
-            # elif [[ "${parameter_types[$n]}" == "bool" ]] || [[ "${parameter_types[$n]}" == "flag" ]]; then
-            #   parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "true" "$trailingcomma")
-            # elif [[ "${parameter_types[$n]}" == "number" ]]; then
-            #
-            #   if [[ "${parameter_min_cardinality[$n]}" -gt 1 ]]; then
-            #     parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "[1234567890]" "$trailingcomma")
-            #   else
-            #     parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "1234567890" "$trailingcomma")
-            #   fi
-            # else
-            #   if [[ "${parameter_min_cardinality[$n]}" -gt 1 ]]; then
-            #     parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "null" "$trailingcomma")
-            #   else
-            #     parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "null" "$trailingcomma")
-            #   fi
-            # fi
           else
 
             if [[ -n "${parameter_max_cardinality[$n]}" ]] && [[ "${parameter_max_cardinality[$n]}" -ne 1 ]]; then
@@ -430,7 +411,7 @@ main() {
               parameters=$(printf "%s\n    ]%s" "$parameters" "$trailingcomma")
 
             elif [[ "${parameter_types[$n]}" == "string" ]] || [[ "${parameter_types[$n]}" == "enumeration" ]]; then
-              parameters=$(printf "%s\n    \"%s\": \"%s\"%s" "$parameters" "$i" "${parameter_defaults[$n]}" "$trailingcomma")
+              parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "${parameter_defaults[$n]}" "$trailingcomma")
             elif [[ "${parameter_types[$n]}" == "bool" ]] || [[ "${parameter_types[$n]}" == "flag" ]]; then
               if [[ "${parameter_defaults[$n]}" == 'false' ]]; then
                 parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "false" "$trailingcomma")
@@ -440,6 +421,7 @@ main() {
             else
               parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "${parameter_defaults[$n]}" "$trailingcomma")
             fi
+            # [[ "${parameter_types[$n]}" == "number" ]] && set +x
           fi
         fi
       fi
