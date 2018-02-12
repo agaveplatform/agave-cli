@@ -376,7 +376,7 @@ function jsonquery {
 
 				if [[ -n "$3" ]]; then
 
-				        if [[ "$jpath" =~ \[\] ]]; then
+					if [[ "$jpath" =~ \[\] ]]; then
 						oIFS="$IFS"
 						IFS="[]" read fbefore fmiddle fafter <<< "$jpath"
 						IFS="$oIFS"
@@ -384,16 +384,16 @@ function jsonquery {
 						fbefore_noperiod="${fbefore%?}"
 
 						if [[ -z "$fbefore_noperiod" ]]; then
-				                	echo "$1" | jq ".[] | $fafter"
+									echo "$1" | jq ".[] | $fafter"
 						else
-				                	echo "$1" | jq "$fbefore_noperiod | .[] | $fafter"
+									echo "$1" | jq "$fbefore_noperiod | .[] | $fafter"
 						fi
-				        else
-				                echo "$1" | jq "$jpath"
-				        fi
+					else
+							echo "$1" | jq "$jpath"
+					fi
 				else
 
-				        if [[ "$jpath" =~ \[\] ]]; then
+					if [[ "$jpath" =~ \[\] ]]; then
 						oIFS="$IFS"
 						IFS="[]" read fbefore fmiddle fafter <<< "$jpath"
 						IFS="$oIFS"
@@ -401,13 +401,13 @@ function jsonquery {
 						fbefore_noperiod="${fbefore%?}"
 
 						if [[ -z "$fbefore_noperiod" ]]; then
-				                	echo "$1" | jq -r ".[] | $fafter"
+							echo "$1" | jq -r ".[] | $fafter"
 						else
-				                	echo "$1" | jq -r "$fbefore_noperiod | .[] | $fafter"
+							echo "$1" | jq -r "$fbefore_noperiod | .[] | $fafter"
 						fi
-				        else
-				                echo "$1" | jq -r "$jpath"
-				        fi
+					else
+						echo "$1" | jq -r "$jpath"
+					fi
 				fi
 
 			elif [[ 'json' == "$AGAVE_JSON_PARSER" ]]; then
@@ -440,7 +440,7 @@ function jsonquery {
 
 				[[ -z "$3" ]] && stripquotes='-s'
 
-				echo "${1}" | python $DIR/python2/pydotjson.py -q ${2} $stripquotes
+				echo "${1}" | python $DIR/python/pydotjson.py -q ${2} $stripquotes
 
 			elif [[ 'native' == "$AGAVE_JSON_PARSER" ]]; then
 
@@ -745,7 +745,7 @@ function json_prettyify {
 	# Look for custom json parsers
 	if [[ 'python' == "$AGAVE_JSON_PARSER" ]]; then
 
-		echo "$@" | python $DIR/python2/pydotjson.py
+		echo "$@" | python $DIR/python/pydotjson.py
 
 	elif [[ 'jq' == "$AGAVE_JSON_PARSER" ]]; then
 
