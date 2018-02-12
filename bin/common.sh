@@ -656,9 +656,9 @@ function prompt_options() {
 function get_auth_header() {
 	if [[ "$development" -ne 1 ]]; then
         if [[ -n "$AGAVE_ACCESS_TOKEN" ]]; then
-            echo "Authorization: Bearer $AGAVE_ACCESS_TOKEN"
+            echo "Authorization:Bearer $AGAVE_ACCESS_TOKEN"
         else
-            echo "Authorization: Bearer $access_token"
+            echo "Authorization:Bearer $access_token"
         fi
     else
 		if [[ -f "$DIR/auth-filter.sh" ]]; then
@@ -666,6 +666,57 @@ function get_auth_header() {
 		else
 		  echo " -u \"${username}:${password}\" "
 		fi
+	fi
+}
+
+#
+# Wraps the system curl command, allowing for user-defined curl implementations.
+#
+# There are currently two bundled options available, both configurable through the AGAVE_CURL_CLIENT
+# environment variable.
+# - native: This will use the existing linux curl command. This option is appropriate for use on
+#   personal systems, containers, and in single-user environments. This is the default option
+# - python: This is a pure Python 2/3 implementation of curl that allows the CLI to hide arguments
+#   that would otherwise be written to the system ps registry and thereby be visible to other users.
+#
+# To utilize another HTTP client, you can specify the path to th executable as the value to the
+# environment variable. For example, to use a dockerized curl command, you could provide the Docker
+# run command as a string value to the variable.
+#
+# Examples:
+#
+# # Use the default system curl command
+# AGAVE_CURL_CLIENT=       		  # use the system curl command
+# AGAVE_CURL_CLIENT=native 		  # use the system curl command
+# AGAVE_CURL_CLIENT=$(which curl) # use the system curl command
+#
+# # Use the bundled pycurl.py command
+# AGAVE_CURL_CLIENT=python #
+#
+# # Use an executable php script in your $HOME/bin dir
+# AGAVE_CURL_CLIENT=$HOME/bin/curl.php
+#
+# # Use a Dockerized curl command
+# AGAVE_CURL_CLIENT="docker run -it --rm appropriate/curl:latest"
+#
+function do_curl
+{
+	# if there is an explicity curl client defined, use that
+	if [[ -z "$AGAVE_CURL_CLIENT" ]] || [[ "$AGAVE_CURL_CLIENT" == 'native' ]]; then
+
+		echo "$(which curl)"
+
+	# if they specify the python reserve word, point to $DIR/python/pycurl for
+	# the bundled secure client
+	elif [[ "$AGAVE_CURL_CLIENT" == 'python' ]]; then
+
+		echo "python $DIR/python/pycurl.py"
+
+	# otherwise, invoke whatever they provide as a non-blank value for
+	# the environment variable
+	else
+
+		echo "$AGAVE_CURL_CLIENT"
 	fi
 }
 

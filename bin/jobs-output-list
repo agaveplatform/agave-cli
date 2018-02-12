@@ -32,6 +32,8 @@ be on the work folder if it still exists.
   -z, --access_token    Access token
   -L, --long            Print response in unix-style ls -l format
   -l, --limit           Maximum number of results to return
+  -r, --recursive       Recursively list the contents of the remote path relative
+                        to the job archive or output directory
   -o, --offset          Number of results to skip from the start
       --filter          Comma separated list of fields to return in the response
   -H, --hosturl         URL of the service
@@ -65,7 +67,7 @@ main() {
 		jobid=${args[0]}
 		path=${args[1]}
 
-    cmd="curl -sk -H \"${authheader}\" '${hosturl}${jobid}/outputs/listings/${path}?pretty=true$(pagination)'"
+        cmd="curl -sk -H \"${authheader}\" '${hosturl}${jobid}/outputs/listings/${path}?pretty=true$(pagination)'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -74,8 +76,56 @@ main() {
 		response=`curl -sk -H "${authheader}" "${hosturl}${jobid}/outputs/listings/${path}?pretty=true$(pagination)"`
 
 		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
-			result=$(format_api_json "$response")
-			success "$result"
+
+            result=$(format_api_json "$response")
+            echo "$result";
+
+            # recursively list all child directories if requested
+            if ((recursive)); then
+
+              fgrparams="-r "
+
+              if ((development)); then
+                fgrparams="$fgrparams  -d "
+              fi
+
+              if ((veryverbose)); then
+
+                fgrparams="$fgrparams -V "
+
+              elif ((verbose)); then
+
+                fgrparams="$fgrparams -v "
+              fi
+
+              if ((long)); then
+
+                fgrparams="$fgrparams -L "
+              fi
+
+              if [[ -n "$access_token" ]]; then
+                fgrparams="$fgrparams -z $access_token"
+              fi
+
+              if ((filter)); then
+
+                fgrparams="$fgrparams --filter $filter "
+              fi
+
+              read -a names <<< $(jsonquery "$response" "result.[].name")
+              read -a formats <<< $(jsonquery "$response" "result.[].format")
+
+              # skip the first index in the array in this for loop
+              #echo "${!names[@]}" | xargs -P 5 -n 1 -I "%%FILE%%" files-get -v $args
+              for i in `echo "${!names[@]}"`; do
+
+                if [ "${formats[i]}" == "folder" ] && [ "${names[i]}" != "." ]; then
+                  jobs-output-list -r ${fgrparams} $jobid "$path/${names[i]}"
+                fi
+
+              done
+
+            fi
 		else
 			errorresponse=$(jsonquery "$response" "message")
 			err "$errorresponse"
@@ -91,14 +141,38 @@ format_api_json() {
 		result=$(jsonquery "$1" "result" 1)
         json_prettyify "${result}"
     elif [[ $long -eq 1 ]]; then
-        lstng=$(lsify "$1" | awk '{ printf("%-10s %+12s %+18s %+32s %s\n", $1, $2, $3, $4, $5); }')
-        echo "$lstng"
+#        lstng=$(lsify "$1" | awk '{ printf("%-10s %+12s %+18s %+32s %s\n", $1, $2, $3, $4, $5); }')
+#        echo "$lstng"
+        lsify "$1" | column -t -s$'\t'
 	elif [[ $rich -eq 1 ]]; then
         result=$(richify "$1")
         columnize "${result}"
     else
-        result=$(jsonquery "$1" "result.[].name")
-        echo "${result}"
+        if ((recursive)); then
+            names=($(jsonquery "$1" "result.[].name"))
+            paths=($(jsonquery "$1" "result.[].path"))
+            types=($(jsonquery "$1" "result.[].type"))
+
+            n=0
+            for i in "${names[@]}"; do
+
+                if [[ "${types[$n]}" == "dir" ]]; then
+                    # skip the named directories in the parent listing as they will be
+                    # printed in their own listing results
+                    if [[ "$i" == "." ]]; then
+                      echo "${paths[$n]}"
+                    fi
+                else
+                    echo "${paths[$n]}"
+                fi
+
+                n=$[n+1]
+            done
+
+        else
+            result=$(jsonquery "$1" "result.[].path")
+            echo "${result}"
+        fi
     fi
 }
 
@@ -170,6 +244,7 @@ while [[ $1 = -?* ]]; do
     --version) version; copyright; disclaimer; safe_exit ;;
     -z|--access_token) shift; access_token=$1 ;;
     -L|--long) long=1;;
+    -r|--recursive) recursive=1;;
     -l|--limit) shift; limit=$1;;
     -o|--offset) shift; offset=$1;;
     --filter) shift; responsefilter=$1 ;;

@@ -70,12 +70,12 @@ main() {
 		fi
 
 		if (($print)); then
-      if ((recursive)); then
-        err "Printing to standard out cannot be specified with recursive downloads"
-        exit
-      else
-			  outputarg=" "
-      fi
+            if ((recursive)); then
+                err "Printing to standard out cannot be specified with recursive downloads"
+                exit
+            else
+                outputarg=" "
+            fi
 		elif [ -n "$filename" ]; then
 			outputarg="-o $filename"
 		else
@@ -83,12 +83,12 @@ main() {
 		fi
 
 		if [ -n "$range" ]; then
-		  if ((recursive)); then
-        err "Range queries cannot be specified with recursive downloads"
-        exit
-      else
-        filerange="-r ${range} "
-      fi
+		    if ((recursive)); then
+                err "Range queries cannot be specified with recursive downloads"
+                exit
+            else
+                filerange="-r ${range} "
+            fi
 		else
 			filerange=""
 		fi
@@ -96,143 +96,151 @@ main() {
     if ((recursive)); then
 
         if ((veryverbose)); then
-          out "Retrieving remote directory listing..."
+            out "Retrieving remote directory listing..."
         fi
 
         if [ -n "$systemId" ]; then
-          fileslistingurl="${hosturl}listings/system/${systemId}/${args}"
+            fileslistingurl="${hosturl}listings/system/${systemId}/${args}"
         else
-          fileslistingurl="${hosturl}listings/${args}"
+            fileslistingurl="${hosturl}listings/${args}"
         fi
 
         response=`curl -sk -H "${authheader}" "${fileslistingurl%/}"`
 
         if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 
-          if ((development)); then
-            fgrparams=" -d "
-          fi
-
-          if ((veryverbose)); then
-
-            fgrparams="$fgrparams -V "
-
-          elif ((verbose)); then
-
-            fgrparams="$fgrparams -v "
-          fi
-
-          read -a names <<< $(jsonquery "$response" "result.[].name")
-          read -a types <<< $(jsonquery "$response" "result.[].type")
-          read -a formats <<< $(jsonquery "$response" "result.[].format")
-          read -a paths <<< $(jsonquery "$response" "result.[].path")
-          read -a lengths <<< $(jsonquery "$response" "result.[].length")
-
-          # make sure we have the systemID
-          if [ -z "$systemId" ]; then
-              systems=($(jsonquery "$response" "result.[].system"))
-              systemId=${systems[0]}
-          fi
-
-          # skip the first index in the array in this for loop
-          #echo "${!names[@]}" | xargs -P 5 -n 1 -I "%%FILE%%" files-get -v $args
-          for i in `echo "${!names[@]}"`; do
-
-            if [ "${formats[i]}" == "folder" ] && [ "${names[i]}" == "." ]; then
-
-              if [ -z "$filename" ]; then
-                filename=$(basename "$args")
-                if [ -z "$filename" ]; then
-                  filename=$(basename "${paths[i]}")
-                fi
-              fi
-
-              if [ -f "$filename" ]; then
-                err "${filename} is a directory (not copied)"
-                exit
-              elif [ -d "$filename" ]; then
-                #echo "Directory $filename exists. Skipping mkdir..."
-                #basefilename=$(basename "$filename");
-                #targetpath=$(printf "%s/%s" ${filename%/} "$basefilename")
-                targetpath="$filename"
-              else
-                echo "Creating directory $filename..."
-                targetpath="$filename"
-              fi
-
-              mkdir -p "$targetpath"
-
-            elif [ "${types[i]}" == "file" ] && [ "${names[i]}" == "." ]; then
-
-              # the target was a file, not a folder
-              if [ -n "$filename" ]; then
-                files-get -${fgrparams} -S $systemId -N $filename $args
-              else
-                files-get ${fgrparams} -S $systemId $args
-              fi
-
-            else
-
-              if [ "${formats[i]}" == "folder" ]; then
-                files-get -r ${fgrparams} -S $systemId -N $targetpath/${names[i]} $args/${names[i]}
-              elif [ "${lengths[i]}" -gt "0" ]; then
-                files-get -v ${fgrparams} -S $systemId -N $targetpath/${names[i]} $args/${names[i]}
-              else
-                echo "Downloading empty file $args/${names[i]}..."
-                echo "######################################################################## 100.0%"
-                touch $targetpath/${names[i]}
-              fi
-
+            if ((development)); then
+                fgrparams=" -d "
             fi
-          done
 
-          #I'm doing breadth first, but it would be slightly more compact to do depth first
-          # for i in `echo "${!names[@]}"`; do
-          #   if [ "${formats[i]}" == "folder" ] && [ "${names[i]}" != "." ]; then
-          #
-          #     files-get ${fgrparams} -r -S $systemId -N $targetpath/${names[i]} $args/${names[i]}
-          #
-          #   fi
-          # done
+            if ((veryverbose)); then
+
+                fgrparams="$fgrparams -V "
+
+            elif ((verbose)); then
+
+                fgrparams="$fgrparams -v "
+            fi
+
+            if (($print)); then
+                fgrparams="$fgrparams -P "
+            fi
+
+            if [[ -n "$access_token" ]]; then
+                fgrparams="$fgrparams -z $access_token"
+            fi
+
+            read -a names <<< $(jsonquery "$response" "result.[].name")
+            read -a types <<< $(jsonquery "$response" "result.[].type")
+            read -a formats <<< $(jsonquery "$response" "result.[].format")
+            read -a paths <<< $(jsonquery "$response" "result.[].path")
+            read -a lengths <<< $(jsonquery "$response" "result.[].length")
+
+            # make sure we have the systemID
+            if [ -z "$systemId" ]; then
+                systems=($(jsonquery "$response" "result.[].system"))
+                systemId=${systems[0]}
+            fi
+
+            # skip the first index in the array in this for loop
+            #echo "${!names[@]}" | xargs -P 5 -n 1 -I "%%FILE%%" files-get -v $args
+            for i in `echo "${!names[@]}"`; do
+
+                if [ "${formats[i]}" == "folder" ] && [ "${names[i]}" == "." ]; then
+
+                    if [ -z "$filename" ]; then
+                        filename=$(basename "$args")
+                        if [ -z "$filename" ]; then
+                            filename=$(basename "${paths[i]}")
+                        fi
+                    fi
+
+                    if [ -f "$filename" ]; then
+                        err "${filename} is a directory (not copied)"
+                        exit
+                    elif [ -d "$filename" ]; then
+                        #echo "Directory $filename exists. Skipping mkdir..."
+                        #basefilename=$(basename "$filename");
+                        #targetpath=$(printf "%s/%s" ${filename%/} "$basefilename")
+                        targetpath="$filename"
+                    else
+                        echo "Creating directory $filename..."
+                        targetpath="$filename"
+                    fi
+
+                    mkdir -p "$targetpath"
+
+                elif [ "${types[i]}" == "file" ] && [ "${names[i]}" == "." ]; then
+
+                    # the target was a file, not a folder
+                    if [ -n "$filename" ]; then
+                        files-get -${fgrparams} -S $systemId -N $filename $args
+                    else
+                        files-get ${fgrparams} -S $systemId $args
+                    fi
+
+                else
+
+                    if [ "${formats[i]}" == "folder" ]; then
+                        files-get -r ${fgrparams} -S $systemId -N $targetpath/${names[i]} $args/${names[i]}
+                    elif [ "${lengths[i]}" -gt "0" ]; then
+                        files-get -v ${fgrparams} -S $systemId -N $targetpath/${names[i]} $args/${names[i]}
+                    else
+                        echo "Downloading empty file $args/${names[i]}..."
+                        echo "######################################################################## 100.0%"
+                        touch $targetpath/${names[i]}
+                    fi
+
+                fi
+            done
+
+            #I'm doing breadth first, but it would be slightly more compact to do depth first
+            # for i in `echo "${!names[@]}"`; do
+            #   if [ "${formats[i]}" == "folder" ] && [ "${names[i]}" != "." ]; then
+            #
+            #     files-get ${fgrparams} -r -S $systemId -N $targetpath/${names[i]} $args/${names[i]}
+            #
+            #   fi
+            # done
 
         else
-          errorresponse=$(jsonquery "$response" "message")
-          err "$errorresponse"
+            errorresponse=$(jsonquery "$response" "message")
+            err "$errorresponse"
         fi
 
     else
-       # set -x
-      cmd="curl -k -H \"${authheader}\" ${filerange} ${outputarg} '${filesurl}'"
+        # set -x
+        cmd="curl -k -H \"${authheader}\" ${filerange} ${outputarg} '${filesurl}'"
 
 
-      if ((veryverbose)); then
-       [ "$piped" -eq 0 ] && log "Calling $cmd"
-      fi
-
-      if [ -z "$filename" ]; then
-        filename=$(basename "$args")
-        if [ -n "$filename" ]; then
-          filename=$(basename "${args}")
+        if ((veryverbose)); then
+            [ "$piped" -eq 0 ] && log "Calling $cmd"
         fi
-      fi
 
-      if ((verbose)); then
-        [ "$piped" -eq 0 ] && out "Downloading $args ..."
-      fi
+        if [ -z "$filename" ]; then
+            filename=$(basename "$args")
+            if [ -n "$filename" ]; then
+                filename=$(basename "${args}")
+            fi
+        fi
 
-      curl -# -k -H "${authheader}" ${filerange} ${outputarg} "${filesurl}"
-
-      if [ "$?" -eq 0 ] && [ ! -f "$filename" ]; then
         if ((verbose)); then
-          echo "Creating empty file $filename..."
+            [ "$piped" -eq 0 ] && out "Downloading $args ..."
         fi
-        touch $filename
-      else
-        response=$(grep '"status":"error"' $filename)
-        if [ -n "$response" ]; then
-          err "$response"
+
+        curl -# -k -H "${authheader}" ${filerange} ${outputarg} "${filesurl}"
+
+        if [ "$?" -eq 0 ] && [ ! -f "$filename" ]; then
+            if ((verbose)); then
+                echo "Creating empty file $filename..."
+            fi
+            touch $filename
+        else
+            response=$(grep '"status":"error"' $filename)
+            if [ -n "$response" ]; then
+                err "$response"
+            fi
         fi
-      fi
 
   	fi
 

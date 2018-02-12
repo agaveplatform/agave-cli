@@ -75,14 +75,14 @@ main() {
 		querystring="${querystring}&status=$status"
 	fi
 
-	cmd="curl -sk -H \"${authheader}\" '$jobsurl?${querystring}$(pagination)'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" '$jobsurl?${querystring}$(pagination)'"
 
 	if ((veryverbose)); then
 		[ "$piped" -eq 0 ] && log "Calling $cmd"
 	fi
 
-	response=`curl -sk -H "${authheader}" "$jobsurl?${querystring}$(pagination)"`
-
+	response=`$(do_curl) -sk -H "${authheader}" "$jobsurl?${querystring}$(pagination)"`
+	echo -e "$response"
 	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 		result=$(format_api_json "$response")
 		success "$result"

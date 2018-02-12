@@ -126,6 +126,14 @@ main() {
             fgrparams="$fgrparams -v "
           fi
 
+          if (($print)); then
+            fgrparams="$fgrparams -P "
+          fi
+
+          if [[ -n "$access_token" ]]; then
+            fgrparams="$fgrparams -z $access_token"
+          fi
+
           read -a names <<< $(jsonquery "$response" "result.[].name")
           read -a types <<< $(jsonquery "$response" "result.[].type")
           read -a formats <<< $(jsonquery "$response" "result.[].format")

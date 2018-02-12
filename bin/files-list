@@ -68,7 +68,7 @@ main() {
 
 	cmd="curl -sk -H \"${authheader}\" '${hosturl}?pretty=true$(pagination)'"
 
-  if ((veryverbose)); then
+    if ((veryverbose)); then
 		[ "$piped" -eq 0 ] && log "Calling $cmd"
 	fi
 
@@ -76,51 +76,55 @@ main() {
 
 	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 
-    result=$(format_api_json "$response")
-    echo "$result";
+        result=$(format_api_json "$response")
+        echo "$result";
 
-    # recursively list all child directories if requested
-    if ((recursive)); then
+        # recursively list all child directories if requested
+        if ((recursive)); then
 
-      fgrparams="-r "
+          fgrparams="-r "
 
-      if ((development)); then
-        fgrparams="$fgrparams  -d "
-      fi
+          if ((development)); then
+            fgrparams="$fgrparams  -d "
+          fi
 
-      if ((veryverbose)); then
+          if ((veryverbose)); then
 
-        fgrparams="$fgrparams -V "
+            fgrparams="$fgrparams -V "
 
-      elif ((verbose)); then
+          elif ((verbose)); then
 
-        fgrparams="$fgrparams -v "
-      fi
+            fgrparams="$fgrparams -v "
+          fi
 
-      if ((long)); then
+          if ((long)); then
 
-        fgrparams="$fgrparams -L "
-      fi
+            fgrparams="$fgrparams -L "
+          fi
 
-      if ((filter)); then
+          if [[ -n "$access_token" ]]; then
+            fgrparams="$fgrparams -z $access_token"
+          fi
 
-        fgrparams="$fgrparams --filter $filter "
-      fi
+          if ((filter)); then
 
-      read -a names <<< $(jsonquery "$response" "result.[].name")
-      read -a formats <<< $(jsonquery "$response" "result.[].format")
+            fgrparams="$fgrparams --filter $filter "
+          fi
 
-      # skip the first index in the array in this for loop
-      #echo "${!names[@]}" | xargs -P 5 -n 1 -I "%%FILE%%" files-get -v $args
-      for i in `echo "${!names[@]}"`; do
+          read -a names <<< $(jsonquery "$response" "result.[].name")
+          read -a formats <<< $(jsonquery "$response" "result.[].format")
 
-        if [ "${formats[i]}" == "folder" ] && [ "${names[i]}" != "." ]; then
-          files-list -r ${fgrparams} -S "$systemId" $args/${names[i]}
+          # skip the first index in the array in this for loop
+          #echo "${!names[@]}" | xargs -P 5 -n 1 -I "%%FILE%%" files-get -v $args
+          for i in `echo "${!names[@]}"`; do
+
+            if [ "${formats[i]}" == "folder" ] && [ "${names[i]}" != "." ]; then
+              files-list -r ${fgrparams} -S "$systemId" $args/${names[i]}
+            fi
+
+          done
+
         fi
-
-      done
-
-    fi
 
 	else
 		errorresponse=$(jsonquery "$response" "message")
