@@ -15,6 +15,8 @@ def parse_args():
 
     parser.add_argument("-v", "--verbose", action='store_true', default=False,
                             help="Show full embed code for the curl statement")
+    parser.add_argument("-d", "--debug", action='store_true', default=False,
+                        help="Show debug output")
     parser.add_argument("-V", "--veryverbose", action='store_true', default=False,
                         help="Show request and embed codes")
     parser.add_argument("-H", "--hurlit", action='store_true', default=True,
@@ -55,7 +57,7 @@ def main():
 
     response = urllib.urlopen(remotequery).read()
 
-    if args.hurlit or True:
+    if args.hurlit:
 
         print 'Showing hurl.it url here'
         p = re.compile('<span class="hurl"><a href="(.*)" target="_blank">')
