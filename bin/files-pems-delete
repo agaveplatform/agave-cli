@@ -69,7 +69,7 @@ main() {
 			hosturl="${hosturl}pems/"
 		fi
 
-    cmd="curl -sk -H \"${authheader}\" -X DELETE '${hosturl}${args}?pretty=true'"
+    cmd="$(do_curl) -sk -H \"${authheader}\" -X DELETE '${hosturl}${args}?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

@@ -72,7 +72,13 @@ hosturl=${hosturl%/}
 hosturl="$hosturl/"
 
 # Delegate logic from the `main` function
-authheader=$(get_auth_header)
+#if [[ -z "$AGAVE_CURL_CLIENT" ]] || [[ "$AGAVE_CURL_CLIENT" == "native" ]]; then
+	authheader=$(get_auth_header)
+#else
+#	AUTH_HEADER=$(get_auth_header)
+#	authheader='$AUTH_HEADER'
+#fi
+
 main
 
 # This has to be run last not to rollback changes we've made.

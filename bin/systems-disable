@@ -56,7 +56,7 @@ main() {
 	else
 		action="disable"
 
-		cmd="curl -sk -H \"${authheader}\" -X PUT -d \"action=${action}\" '$hosturl$args?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X PUT -d \"action=${action}\" '$hosturl$args?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

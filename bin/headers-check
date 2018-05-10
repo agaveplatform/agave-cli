@@ -57,7 +57,7 @@ main() {
 
     else
 
-        cmd="curl -sk -H \"${authheader}\" '${hosturl%%/}"
+        cmd="$(do_curl) -sk -H \"${authheader}\" '${hosturl%%/}"
 
         if ((veryverbose)); then
             [ "$piped" -eq 0 ] && log "Calling $cmd"

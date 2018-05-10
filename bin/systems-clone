@@ -62,7 +62,7 @@ main() {
 			new_system_id="&id=$id"
 		fi
 
-		cmd="curl -sk -H \"${authheader}\" -X PUT -d \"action=clone$new_system_id\" '$hosturl$args?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X PUT -d \"action=clone$new_system_id\" '$hosturl$args?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

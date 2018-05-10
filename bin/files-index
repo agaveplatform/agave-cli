@@ -68,7 +68,7 @@ main() {
 		hosturl="${hosturl}index/"
 	fi
 
-	cmd="curl -sk -H \"${authheader}\" '${hosturl}${args}?pretty=true$(pagination)'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" '${hosturl}${args}?pretty=true$(pagination)'"
 
 	if ((veryverbose)); then
 		[ "$piped" -eq 0 ] && log "Calling $cmd"

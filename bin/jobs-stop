@@ -54,7 +54,7 @@ main() {
 	if [ -z "$args" ]; then
 		err "Please specify a job id to stop"
 	else
-		cmd="curl -sk -H \"${authheader}\" -X POST -d \"action=stop\" '$hosturl$args?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X POST -d \"action=stop\" '$hosturl$args?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

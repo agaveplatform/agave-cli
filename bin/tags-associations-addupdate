@@ -68,7 +68,7 @@ main() {
 
     uuids=$(echo "${args}" | sed -e 's/ /","/g')
 
-    cmd="curl -sk -H \"${authheader}\" -X POST -H 'Content-Type: application/json' --data-binary  '[\"${uuids}\"]' '${hosturl}$tag_id/associations?pretty=true'"
+    cmd="$(do_curl) -sk -H \"${authheader}\" -X POST -H 'Content-Type: application/json' --data-binary  '[\"${uuids}\"]' '${hosturl}$tag_id/associations?pretty=true'"
 
     if ((veryverbose)); then
         [ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -82,7 +82,7 @@ main() {
       # tag id is first positional argument
       tag_id="${args[0]}"
 
-      cmd="curl -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X POST --data-binary @- '${hosturl}$tag_id/associations?pretty=true'"
+      cmd="$(do_curl) -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X POST --data-binary @- '${hosturl}$tag_id/associations?pretty=true'"
 
     if ((veryverbose)); then
       [ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -97,7 +97,7 @@ main() {
       # tag id is first positional argument
       tag_id="${args[0]}"
 
-      cmd="curl -sk -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" '${hosturl}$tag_id/associations?pretty=true'"
+      cmd="$(do_curl) -sk -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" '${hosturl}$tag_id/associations?pretty=true'"
 
     if ((veryverbose)); then
         [ "$piped" -eq 0 ] && log "Calling $cmd"

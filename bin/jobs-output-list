@@ -67,7 +67,7 @@ main() {
 		jobid=${args[0]}
 		path=${args[1]}
 
-        cmd="curl -sk -H \"${authheader}\" '${hosturl}${jobid}/outputs/listings/${path}?pretty=true$(pagination)'"
+        cmd="$(do_curl) -sk -H \"${authheader}\" '${hosturl}${jobid}/outputs/listings/${path}?pretty=true$(pagination)'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

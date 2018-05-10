@@ -81,7 +81,7 @@ main() {
 		authUsername=$apiusername
 		apiusername=$tokenuser
         
-        cmd="curl -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"token_username=${apiusername}\" --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${apipassword}\" --data-urlencode \"grant_type=admin_password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
+        cmd="$(do_curl) -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"token_username=${apiusername}\" --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${apipassword}\" --data-urlencode \"grant_type=admin_password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -94,7 +94,7 @@ main() {
 		# standard auth request
 		authUsername=$apiusername
 
-		cmd="curl -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${apipassword}\" --data-urlencode \"grant_type=password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
+		cmd="$(do_curl) -sku \"$apikey:$apisecret\" -X POST --data-urlencode \"username=${authUsername}\" --data-urlencode \"password=${apipassword}\" --data-urlencode \"grant_type=password\" --data-urlencode \"scope=PRODUCTION\" '${hosturl}'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

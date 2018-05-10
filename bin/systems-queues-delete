@@ -55,7 +55,7 @@ main() {
 		err "Please specify a valid system id for which to delete the batch queues"
 	else
 
-		cmd="curl -sk -H \"${authheader}\" -X DELETE '$hosturl$args/queues/$queuename?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X DELETE '$hosturl$args/queues/$queuename?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

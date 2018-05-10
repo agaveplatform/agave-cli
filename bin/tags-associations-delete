@@ -73,7 +73,7 @@ main() {
 
             uuid=$1
 
-            cmd="curl -sk -H \"${authheader}\" -X DELETE '${hosturl}$tag_id/associations/$uuid?pretty=true'"
+            cmd="$(do_curl) -sk -H \"${authheader}\" -X DELETE '${hosturl}$tag_id/associations/$uuid?pretty=true'"
 
             if ((veryverbose)); then
                 [ "$piped" -eq 0 ] && log "Calling $cmd"

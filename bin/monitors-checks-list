@@ -99,7 +99,7 @@ main() {
 
   else
 
-    cmd="curl -sk -H \"${authheader}\" '${monitorurl}$(pagination)'"
+    cmd="$(do_curl) -sk -H \"${authheader}\" '${monitorurl}$(pagination)'"
 
   	if ((veryverbose)); then
   		[ "$piped" -eq 0 ] && log "Calling $cmd"

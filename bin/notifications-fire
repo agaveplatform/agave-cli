@@ -51,7 +51,7 @@ main() {
 	#echo -n
 	#set -x
 
-	cmd="curl -sk -H \"${authheader}\" -X POST -d \"foo=bar\" '${hosturl}$args/attempts?pretty=true'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" -X POST -d \"foo=bar\" '${hosturl}$args/attempts?pretty=true'"
 
 	if ((veryverbose)); then
 		log "Calling $cmd"

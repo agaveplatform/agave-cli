@@ -75,12 +75,25 @@ args=()
 if [[ -z "$AGAVE_JSON_PARSER" ]]; then
 	# If no parser is specified, look for python in the local path
 	# and fall back on the native json.sh implementation.
-#	if hash python 2>/dev/null; then
-#		AGAVE_JSON_PARSER='python'
-#	else
+	if hash jq 2>/dev/null; then
+		AGAVE_JSON_PARSER='jq'
+	elif hash python 2>/dev/null; then
+		AGAVE_JSON_PARSER='python'
+	else
 		AGAVE_JSON_PARSER='native'
-#	fi
+	fi
 fi
+
+# Configure which curl client to use
+#if [[ -z "$AGAVE_CURL_CLIENT" ]]; then
+#	# If no parser is specified, look for python in the local path
+#	# and fall back on the native json.sh implementation.
+#	if hash python 2>/dev/null; then
+#		AGAVE_CURL_CLIENT='python'
+#	else
+#		AGAVE_JSON_PARSER='native'
+#	fi
+#fi
 
 # }}}
 # Helpers {{{
@@ -700,7 +713,7 @@ function get_auth_header() {
 # AGAVE_CURL_CLIENT="docker run -it --rm appropriate/curl:latest"
 #
 function do_curl
-{
+{ 
 	# if there is an explicity curl client defined, use that
 	if [[ -z "$AGAVE_CURL_CLIENT" ]] || [[ "$AGAVE_CURL_CLIENT" == 'native' ]]; then
 
@@ -760,6 +773,9 @@ if [[ "auth-switch" != "$calling_cli_command" ]] && [[ "tenants-init" != "$calli
   fi
 
   baseurl=$(jsonquery "$currentconfig" "baseurl")
+#  if [[ -n "$AGAVE_BASE_URL" ]]; then
+#	  devurl=${AGAVE_BASE_URL%/}
+#  fi
   if  [[ -z $baseurl ]]; then
     err "Please run $DIR/tenants-init to configure your client endpoints before attempting to interact with the APIs."
     exit
@@ -768,9 +784,9 @@ if [[ "auth-switch" != "$calling_cli_command" ]] && [[ "tenants-init" != "$calli
   fi
 
   devurl=$(jsonquery "$currentconfig" "devurl")
-  if [[ -n "$AGAVE_DEVURL" ]]; then
-	devurl=${AGAVE_DEVURL%/}
-  fi
+#  if [[ -n "$AGAVE_DEV_URL" ]]; then
+#	devurl=${AGAVE_DEV_URL%/}
+#  fi
   if [[ -n "$devurl" ]]; then
     devurl="${devurl%/}"
   fi
@@ -794,7 +810,7 @@ function join {
 function json_prettyify {
 
 	# Look for custom json parsers
-	if [[ 'python' == "$AGAVE_JSON_PARSER" ]]; then
+	if [[ -z "$AGAVE_JSON_PARSER" ]] || [[ 'python' == "$AGAVE_JSON_PARSER" ]]; then
 
 		echo "$@" | python $DIR/python/pydotjson.py
 

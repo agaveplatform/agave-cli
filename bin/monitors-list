@@ -86,7 +86,7 @@ main() {
 
 	fi
 
-	cmd="curl -sk -H \"${authheader}\" '${monitorurl}'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" '${monitorurl}'"
 
 	if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

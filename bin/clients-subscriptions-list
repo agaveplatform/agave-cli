@@ -65,7 +65,7 @@ main() {
 	if [ -z "$client_name" ]; then
 		err "Please specify a valid client for which to list subscriptions"
 	else
-		cmd="curl -sku \"${apiusername}:${apipassword}\" '${hosturl}${client_name}/subscriptions?pretty=true$(pagination)'"
+		cmd="$(do_curl) -sku \"${apiusername}:${apipassword}\" '${hosturl}${client_name}/subscriptions?pretty=true$(pagination)'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

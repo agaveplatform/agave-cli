@@ -139,7 +139,7 @@ main()
 
 		query=${query%&}
 
-		cmd="curl -sk -H \"${authheader}\" -X ${http_method} -d \"${query}\" '${hosturl}$args?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X ${http_method} -d \"${query}\" '${hosturl}$args?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -150,7 +150,7 @@ main()
 	# reading from stdin
 	elif [[ "$filetoupload" == "-"  ]]; then
 
-		cmd="curl -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X ${http_method} --data-binary @- '${hosturl}${args}?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X ${http_method} --data-binary @- '${hosturl}${args}?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -162,7 +162,7 @@ main()
 	# standard file upload
 	elif [[ -f "$filetoupload" ]]; then
 
-		cmd="curl -sk -H \"${authheader}\" -X ${http_method} -F \"fileToUpload=@$filetoupload\" '${hosturl}$args?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X ${http_method} -F \"fileToUpload=@$filetoupload\" '${hosturl}$args?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

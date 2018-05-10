@@ -64,7 +64,7 @@ main() {
 			filesurl="${hosturl}media/${args}?pretty=true"
 		fi
 
-		cmd="curl -sk -H \"${authheader}\" -X DELETE '${filesurl}'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X DELETE '${filesurl}'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

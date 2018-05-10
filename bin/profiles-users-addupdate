@@ -59,7 +59,7 @@ main() {
 	#echo -n
 	#set -x
 
-	cmd="curl -sk -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" '$hosturl$username/users/$args?pretty=true'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" '$hosturl$username/users/$args?pretty=true'"
 
 	if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

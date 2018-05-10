@@ -63,7 +63,7 @@ main() {
 
 		hosturl="$baseuuidurl/$args"
 
-		cmd="curl -sk -H \"${authheader}\" '${hosturl}?expand=$expand&pretty=true$(pagination)'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" '${hosturl}?expand=$expand&pretty=true$(pagination)'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -85,7 +85,7 @@ main() {
 		# convert them to a comma separated list
 		uuids=$(echo "${args[@]}" | sed -e 's/ /,/g')
 
-		cmd="curl -sk -H \"${authheader}\" '${hosturl}?uuids=$uuids&expand=$expand&pretty=true$(pagination)'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" '${hosturl}?uuids=$uuids&expand=$expand&pretty=true$(pagination)'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

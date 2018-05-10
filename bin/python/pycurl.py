@@ -90,8 +90,8 @@ def loader(val,require_secure=False):
                 sys.stderr.write('curl: couldn\'t read environment variable "%s"' % g.group(2))
                 return ""
     else:
-        #if require_secure:
-        #    raise Exception("Credentials Exposed: "+cmd)
+        if require_secure:
+            raise Exception("Credentials Exposed: "+cmd)
         return val
 
 # check for requests package. If missing and pip is installed,

@@ -65,7 +65,7 @@ main() {
 			hosturl="${hosturl}media/"
 		fi
 
-		cmd="curl -sk -H \"${authheader}\" -X PUT -d \"action=rename&path=${name}\" '$hosturl${args}?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X PUT -d \"action=rename&path=${name}\" '$hosturl${args}?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

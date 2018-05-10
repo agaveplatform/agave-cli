@@ -67,7 +67,7 @@ main() {
 		err "Please specify a valid client to delete"
 	else
 
-		cmd="curl -sku \"${apiusername}:xxxx\" -X DELETE '${hosturl}${client_name}?pretty=true'"
+		cmd="$(do_curl) -sku \"${apiusername}:xxxx\" -X DELETE '${hosturl}${client_name}?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

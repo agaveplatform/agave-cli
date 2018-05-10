@@ -56,6 +56,9 @@ source "$DIR/apps-common.sh"
 main() {
 	#echo -n
 	#set -x
+  app_filter_arg="--filter=id,name,defaultMaxRunTime,defaultProcessorsPerNode,defaultNodeCount,defaultMemoryPerNode,defaultQueue,inputs,parameters"
+  execution_system_filter_arg="--filter=id,name,queues"
+  archive_system_filter_arg="--filter=id"
 
   if [ -z "$args" ]; then
     err "Please specify an app on which to base the job template"
@@ -73,7 +76,7 @@ main() {
         if ((verbose)); then
           [ "$piped" -eq 0 ] && log "Fetching app description for $args"
         fi
-        app_description=$(apps-list $debug_flag -v $args)
+        app_description=$(apps-list $app_filter_arg $debug_flag -v $args)
         kvset jtapp "$app_description"
       else
         app_description=$(kvget jtapp)
@@ -84,7 +87,7 @@ main() {
           kvdel jtapp
           kvdel jtexe
           kvdel jtstorage
-          app_description=$(apps-list $debug_flag -v $args)
+          app_description=$(apps-list $app_filter_arg $debug_flag -v $args)
           kvset jtapp "$app_description"
         else
           if ((verbose)); then
@@ -99,7 +102,7 @@ main() {
       kvdel jtapp
       kvdel jtexe
       kvdel jtstorage
-      app_description=$(apps-list $debug_flag -v $args)
+      app_description=$(apps-list $app_filter_arg $debug_flag -v $args)
     fi
 
     if ((veryverbose)); then
@@ -110,7 +113,7 @@ main() {
     # queue to fill in any missing default runtime configuration info in the
     # job template.
 
-    app_execution_system_id=$(apps-list $debug_flag -v --filter=executionSystem $args 2>/dev/null)
+    app_execution_system_id=$(apps-list $app_filter_arg $debug_flag -v --filter=executionSystem $args 2>/dev/null)
 
     execution_system_id=$(jsonquery "$app_execution_system_id" "executionSystem")
 
@@ -121,7 +124,7 @@ main() {
           if ((verbose)); then
             [ "$piped" -eq 0 ] && log "Fetching system description for execution system $execution_system_id..."
           fi
-          execution_system=`echo $(systems-list $debug_flag -v $execution_system_id)`
+          execution_system=`echo $(systems-list $execution_system_filter_arg $debug_flag -v $execution_system_id)`
           kvset jtexe "$execution_system"
         else
           execution_system=$(kvget jtexe)
@@ -130,7 +133,7 @@ main() {
               [ "$piped" -eq 0 ] && log "Cached execution system description was stale. Fetching system description for execution system $execution_system_id..."
             fi
             kvdel jtexe
-            execution_system=$(systems-list $debug_flag -v $execution_system_id)
+            execution_system=$(systems-list $execution_system_filter_arg $debug_flag -v $execution_system_id)
             kvset jtexe "$execution_system"
           else
             if ((verbose)); then
@@ -142,13 +145,13 @@ main() {
         if ((verbose)); then
           [ "$piped" -eq 0 ] && log "Fetching system description for execution system $execution_system_id..."
         fi
-        execution_system=`echo $(systems-list $debug_flag -v $execution_system_id)`
+        execution_system=`echo $(systems-list $execution_system_filter_arg $debug_flag -v $execution_system_id)`
       fi
 
 
-      # set -x
+#      set -x
       queue_names=(`jsonquery "${execution_system}" "queues.[].name"`)
-      # set +x
+#      set +x
       queue_defaults=(`jsonquery "${execution_system}" "queues.[].default"`)
       queue_memories=(`jsonquery "${execution_system}" "queues.[].maxMemoryPerNode"`)
       queue_ppns=(`jsonquery "${execution_system}" "queues.[].maxProcessorsPerNode"`)
@@ -156,8 +159,11 @@ main() {
 
       for i in "${queue_defaults[@]}"; do
         if [ "$i" == 'rue' ] || [ "$i" == "true" ] || [ "$i" == "True" ]; then
+
           system_default_queue_name="${queue_names[$n]}"
+          #echo "default queue ppn"
           system_default_queue_ppn="${queue_ppns[$n]}"
+          #echo "default queue memory"
           system_default_queue_memory="${queue_memories[$n]}"
           break
         fi
@@ -201,7 +207,7 @@ main() {
           if ((verbose)); then
             [ "$piped" -eq 0 ] && log "Fetching default storage system description..."
           fi
-          default_system=$(systems-list $debug_flag -D -S -v )
+          default_system=$(systems-list $archive_system_filter_arg $debug_flag -D -S -v )
           kvset jtstorage "$default_system"
         else
           default_system=$(kvget jtstorage)
@@ -210,7 +216,7 @@ main() {
               [ "$piped" -eq 0 ] && log "Cached storage system description was stale. Fetching fresh default storage system description..."
             fi
             kvdel jtstorage
-            default_system=$(systems-list $debug_flag -D -S -v )
+            default_system=$(systems-list $archive_system_filter_arg $debug_flag -D -S -v )
             kvset jtstorage "$default_system"
           else
             if ((verbose)); then
@@ -222,7 +228,7 @@ main() {
         if ((verbose)); then
           [ "$piped" -eq 0 ] && log "Fetching default storage system description..."
         fi
-        default_system=$(systems-list $debug_flag -D -S -v )
+        default_system=$(systems-list $archive_system_filter_arg $debug_flag -D -S -v )
       fi
 
       archivePath="null"
@@ -237,7 +243,7 @@ main() {
       [ "$piped" -eq 0 ] && log "Parsing app inputs..."
     fi
     input_ids=(`jsonquery "$app_description" "inputs.[].id"`)
-    input_defaults=(`jsonquery "$app_description" "inputs.[].value.default"`)
+    input_defaults=(`jsonquery "$app_description" "inputs.[].value.default" 1`)
     input_requireds=(`jsonquery "$app_description" "inputs.[].value.required"`)
     input_visibles=(`jsonquery "$app_description" "inputs.[].value.visible"`)
     input_min_cardinality=(`jsonquery "$app_description" "inputs.[].semantics.minCardinality"`)
@@ -275,7 +281,7 @@ main() {
               if [[ "$tmpDefaultsCount" -eq "$[zz+1]" ]]; then
                 tc=''
               fi
-              if [[ "$z" != "null" ]]; then
+              if [[ "$z" != "null" ]] ; then
                 inputs=$(printf "%s\n      \"%s\"%s" "$inputs" "$z" "$tc")
               fi
               zz=$[zz+1]

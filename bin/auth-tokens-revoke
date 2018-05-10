@@ -89,7 +89,7 @@ main() {
             err "No token found in the current environment cache. Please provide a valid access token to revoke"
         fi
         
-        cmd="curl -sku \"$apikey:$apisecret\" -X POST -d 'token=$token_to_revoke' '$hosturl'"
+        cmd="$(do_curl) -sku \"$apikey:$apisecret\" -X POST -d 'token=$token_to_revoke' '$hosturl'"
         
         if ((veryverbose)); then
             [ "$piped" -eq 0 ] && log "Calling $cmd"

@@ -107,7 +107,7 @@ main() {
 
 				post_options=${post_options%&}
 
-				cmd="curl $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" -F \"${post_options}\" '$hosturl$args?pretty=true'"
+				cmd="$(do_curl) $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" -F \"${post_options}\" '$hosturl$args?pretty=true'"
 
 				if ((veryverbose)); then
 					[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -117,7 +117,7 @@ main() {
 
 			else
 
-				cmd="curl $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" '$hosturl$args?pretty=true'"
+				cmd="$(do_curl) $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" '$hosturl$args?pretty=true'"
 
 				if ((veryverbose)); then
 					[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -140,7 +140,7 @@ main() {
 
 				  post_options=${post_options%&}
 
-				  cmd="curl $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@-\" -F \"${post_options}\" '$hosturl$args?pretty=true'"
+				  cmd="$(do_curl) $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@-\" -F \"${post_options}\" '$hosturl$args?pretty=true'"
 
 				  if ((veryverbose)); then
 					[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -150,7 +150,7 @@ main() {
 
 				else
 
-				  cmd="curl $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@-\" '$hosturl$args?pretty=true'"
+				  cmd="$(do_curl) $quietarg -k -H \"${authheader}\" -X POST -F \"fileToUpload=@-\" '$hosturl$args?pretty=true'"
 
 				  if ((veryverbose)); then
 					[ "$piped" -eq 0 ] && log "Calling $cmd"

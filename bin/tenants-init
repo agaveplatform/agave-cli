@@ -97,7 +97,7 @@ main() {
   else
     
     # fetch tenant list from discovery service
-    cmd="curl -sk ${hosturl%/}?pretty=true&limit=1000"
+    cmd="$(do_curl) -sk ${hosturl%/}?pretty=true&limit=1000"
         
     if ((veryverbose)); then
         [ "$piped" -eq 0 ] && log "Calling $cmd"

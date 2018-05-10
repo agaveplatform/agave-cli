@@ -52,7 +52,7 @@ main() {
 	#echo -n
 	#set -x
 
-	cmd="curl -sk -H \"${authheader}\" -X DELETE '$hosturl$username/users/$internalusername?pretty=true'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" -X DELETE '$hosturl$username/users/$internalusername?pretty=true'"
 
 	if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

@@ -87,7 +87,7 @@ main() {
 		hosturl="${hosturl}media/"
 	fi
 
-	cmd="curl -sk -H \"${authheader}\" -X POST --data-urlencode \"urlToIngest=${urltoingest}\" --data-urlencode \"notifications=${webhook}\" --data-urlencode \"fileType=${filetype}\" --data-urlencode \"fileName=${filename}\" '$hosturl$args?pretty=true'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" -X POST --data-urlencode \"urlToIngest=${urltoingest}\" --data-urlencode \"notifications=${webhook}\" --data-urlencode \"fileType=${filetype}\" --data-urlencode \"fileName=${filename}\" '$hosturl$args?pretty=true'"
 
     if ((veryverbose)); then
         [ "$piped" -eq 0 ] && log "Calling $cmd"

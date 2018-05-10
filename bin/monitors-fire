@@ -59,7 +59,7 @@ main() {
     err "Please provide a monitor id."
   fi
 
-	cmd="curl -sk -H \"${authheader}\" -XPOST -d \"foo=bar\" '${hosturl}'"
+	cmd="$(do_curl) -sk -H \"${authheader}\" -XPOST -d \"foo=bar\" '${hosturl}'"
 
 	if ((veryverbose)); then
 		log "Calling $cmd"

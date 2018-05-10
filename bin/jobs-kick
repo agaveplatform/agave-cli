@@ -63,7 +63,7 @@ main() {
 
         for jobid in "${args[@]}"
         do
-            cmd="curl -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X POST --data-binary '{\"action\": \"reset\"}' '$hosturl/$jobid?pretty=true$(pagination)'"
+            cmd="$(do_curl) -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X POST --data-binary '{\"action\": \"reset\"}' '$hosturl/$jobid?pretty=true$(pagination)'"
 
             if ((veryverbose)); then
                 [ "$piped" -eq 0 ] && log "Calling $cmd"

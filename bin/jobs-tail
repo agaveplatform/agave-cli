@@ -64,7 +64,7 @@ main()
 		if [[ $rich -eq 1 ]]; then
 			for jobid in "${args[@]}"
 			do
-				cmd="curl -sk -H \"${authheader}\" '${hosturl}/${jobid}/history?limit=1&filter=progress&order=desc&status.in=ARCHIVING,STAGING_INPUTS'"
+				cmd="$(do_curl) -sk -H \"${authheader}\" '${hosturl}/${jobid}/history?limit=1&filter=progress&order=desc&status.in=ARCHIVING,STAGING_INPUTS'"
 
 				if ((veryverbose)); then
 					[ "$piped" -eq 0 ] && log "Calling $cmd"
@@ -84,7 +84,7 @@ main()
 
 			for jobid in "${args[@]}"
 			do
-				cmd="curl -sk -H \"${authheader}\" '${hosturl}/${jobid}/history?pretty=true&limit=1&filter=progress&order=desc&status.in=ARCHIVING,STAGING_INPUTS'"
+				cmd="$(do_curl) -sk -H \"${authheader}\" '${hosturl}/${jobid}/history?pretty=true&limit=1&filter=progress&order=desc&status.in=ARCHIVING,STAGING_INPUTS'"
 
 				if ((veryverbose)); then
 					[ "$piped" -eq 0 ] && log "Calling $cmd"

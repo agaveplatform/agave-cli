@@ -57,7 +57,7 @@ main() {
 		err "Please specify a valid metadata object id to delete"
 	else
 
-		cmd="curl -sk -H \"${authheader}\" -X DELETE '${hosturl}schemas/${args}?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X DELETE '${hosturl}schemas/${args}?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"

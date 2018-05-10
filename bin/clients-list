@@ -62,7 +62,7 @@ main() {
 		clientsurl="${hosturl}?pretty=true$(pagination)"
 	fi
 
-	cmd="curl -sku \"${apiusername}:xxxx\" '${clientsurl}'"
+	cmd="$(do_curl) -sku \"${apiusername}:xxxx\" '${clientsurl}'"
 
 	if ((veryverbose)); then
 		[ "$piped" -eq 0 ] && log "Calling $cmd"

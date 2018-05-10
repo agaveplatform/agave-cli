@@ -55,7 +55,7 @@ main() {
 	if [ -z "$args" ]; then
 		err "Please specify a valid system id for which to retrieve the user roles"
 	else
-		cmd="curl -sk -H \"${authheader}\" -X DELETE '$hosturl$args/roles/$roleusername?pretty=true'"
+		cmd="$(do_curl) -sk -H \"${authheader}\" -X DELETE '$hosturl$args/roles/$roleusername?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
