@@ -103,8 +103,12 @@ main() {
 	response=`curl -sk -H "${authheader}" "$hosturl?${querystring}"`
 
 	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
-		result=$(format_api_json "${response}")
-		success "$result"
+		if ((veryverbose)) && [ "$piped" -eq 1 ]; then
+			echo $response
+		else
+			result=$(format_api_json "$response")
+			success "$result"
+		fi
 	else
 		errorresponse=$(jsonquery "$response" "message")
 		err "$errorresponse"
