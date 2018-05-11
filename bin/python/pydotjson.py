@@ -143,8 +143,9 @@ def main():
             else:
                 if debug: print("instance is dict, object, etc")
 
-                if type(query_result) is map:
+                if type(query_result) is map :
                     if debug: print("query result is of type map")
+
                     if args.stripquotes:
                         for x in query_result:
                             if type(x) is map:
@@ -154,8 +155,11 @@ def main():
                     else:
                         for x in query_result:
                             print(json.dumps(x, sort_keys=True, indent=2, separators=(',', ': ')))
+                elif isinstance(query_result, edict):
+                    if debug: print("query result is of type EasyDict")
+                    print(json.dumps(query_result, sort_keys=True, indent=2, separators=(',', ': ')))
                 else:
-                    print("non map type is %s" % type(query_result))
+                    if debug: print("non map type is %s" % type(query_result))
                     print (json.dumps(list(query_result), sort_keys=True, indent=2, separators=(',', ': ')))
 
 
