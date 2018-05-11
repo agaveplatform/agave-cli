@@ -254,10 +254,10 @@ main() {
     input_max_cardinality=(`jsonquery "$app_description" "result.inputs.[].semantics.maxCardinality"`)
     input_count=${#input_ids[@]}
 
-    echo "${input_ids[@]}"
-    echo "Size ${#input_defaults[@]}: ${input_defaults[@]}"
-    echo "Size ${#array_input_defaults[@]}: ${array_input_defaults[@]}"
-    echo "Including all fields: $allfields"
+#    echo "${input_ids[@]}"
+#    echo "Size ${#input_defaults[@]}: ${input_defaults[@]}"
+#    echo "Size ${#array_input_defaults[@]}: ${array_input_defaults[@]}"
+#    echo "Including all fields: $allfields"
     n=0
     for i in "${input_ids[@]}"; do
 
@@ -275,7 +275,7 @@ main() {
           if [[ "${input_defaults[$n]}" == "null" ]]; then
             tmpDefaults=( $(generateDefaults "input" ${input_min_cardinality[$n]} ${input_max_cardinality[$n]}) )
             tmpDefaultsCount=${#tmpDefaults[@]}
-            echo "${input_ids[$n]} has max cardinality ${input_max_cardinality[$n]} and $tmpDefaultsCount default values: ${tmpDefaults[@]}"
+#            echo "${input_ids[$n]} has max cardinality ${input_max_cardinality[$n]} and $tmpDefaultsCount default values: ${tmpDefaults[@]}"
           elif [[ "${input_max_cardinality[$n]}" -ne 1 ]]; then
               if [[ "${#array_input_defaults[@]}" -eq "${#input_defaults[@]}" ]]; then
                   tmpDefaults=$(echo $(jsonquery "$app_description" "result.inputs[$n].value.default") | sed -E "s/u'(.*)'/\"\1\"/g")
@@ -285,7 +285,7 @@ main() {
 #              tmpDefaults=( $(echo "$tmpDefaults" | sed 's/\]//g' | sed 's/\[//g' | sed 's/,/ /g' ) )
 #            tmpDefaults=$(echo $(jsonquery "$app_description" "result.inputs[$n].value.default" ) | sed -E "s/u'(.*)'/\"\1\"/g")
             tmpDefaultsCount=${#tmpDefaults[@]}
-            echo "${input_ids[$n]} is an array with max cardinality ${input_max_cardinality[$n]} and $tmpDefaultsCount default values: ${tmpDefaults}"
+#            echo "${input_ids[$n]} is an array with max cardinality ${input_max_cardinality[$n]} and $tmpDefaultsCount default values: ${tmpDefaults}"
           fi
 
           if [[ "${input_max_cardinality[$n]}" -ne 1 ]]; then
@@ -344,10 +344,10 @@ main() {
     #parameter_enum_values=(`jsonquery "${app_description}" "result.parameters.[].value.enum_values"`)
     parameter_count=${#parameter_ids[@]}
 
-      echo "${parameter_ids[@]}"
-      echo "Size ${#single_parameter_defaults[@]}: ${single_parameter_defaults[@]}"
-      echo "Size ${#parameter_defaults[@]}: ${parameter_defaults[@]}"
-      echo "Including all fields: $allfields"
+#      echo "${parameter_ids[@]}"
+#      echo "Size ${#single_parameter_defaults[@]}: ${single_parameter_defaults[@]}"
+#      echo "Size ${#parameter_defaults[@]}: ${parameter_defaults[@]}"
+#      echo "Including all fields: $allfields"
     n=0
     for i in "${parameter_ids[@]}"; do
 
@@ -358,7 +358,7 @@ main() {
         trailingcomma=','
       fi
 
-        echo "${parameter_ids[$n]} default value is ${parameter_defaults[$n]}"
+#        echo "${parameter_ids[$n]} default value is ${parameter_defaults[$n]}"
       if [[ "${parameter_visibles[$n]}" == "rue" ]] || [[ "${parameter_visibles[$n]}" == "true" ]] || [[ "${parameter_visibles[$n]}" == "True" ]]; then
         if [[ "${parameter_requireds[$n]}" == "rue" ]] || [[ "${parameter_requireds[$n]}" == "true" ]] || [[ "${parameter_requireds[$n]}" == "True" ]] || [[ "$allfields" == 1 ]]; then
           if [[ "${parameter_defaults[$n]}" == "null" ]]; then
@@ -486,12 +486,12 @@ main() {
         [ "$piped" -eq 0 ] && log "Fetching your profile description..."
       fi
 
-      profiles_description=$(profiles-list $debug_flag -v me )
-    echo "$profiles_description"
-      if [[ -z "$profiles_description" ]]; then
+        user_email=$(profiles-list me 2>/dev/null)
+#    echo "$profiles_description"
+      if [[ -z "$user_email" ]]; then
 	       EMPTY_PROFILE=1
-      else
-        user_email=$(jsonquery "$profiles_description" "email" 1)
+#      else
+#        user_email=$(jsonquery "$profiles_description" "email" 1)
       fi
 
       if ((verbose)); then
