@@ -313,7 +313,8 @@ function pagination {
 	fi
 
 	if [[ -n "$responsefilter" ]]; then
-		pagination="${pagination}&filter=$responsefilter"
+		escresponsefilter=$(echo "$responsefilter" | sed 's/\[/%5B/g' | sed 's/\]/%5D/g')
+		pagination="${pagination}&filter=$escresponsefilter"
 	fi
 
 	if [[ -n "$sortOrder" ]]; then
