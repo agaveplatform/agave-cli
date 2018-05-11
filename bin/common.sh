@@ -71,15 +71,25 @@ development=$( (("$AGAVE_DEVEL_MODE")) && echo "1" || echo "0" )
 disable_cache=0 # set to 1 to prevent using auth cache.
 args=()
 
+# checks that a command exists. returns 1 or 0
+function command_exists() {
+	which $1 >> /dev/null 2>&1
+
+	echo !$?
+}
+
 # Configure which json parser to use
 if [[ -z "$AGAVE_JSON_PARSER" ]]; then
 	# If no parser is specified, look for python in the local path
 	# and fall back on the native json.sh implementation.
-#	if hash python 2>/dev/null; then
-#		AGAVE_JSON_PARSER='python'
-#	else
+
+	if (( $(command_exists "jq") )); then
+		AGAVE_JSON_PARSER='jq'
+	elif hash python 2>/dev/null; then
+		AGAVE_JSON_PARSER='python'
+	else
 		AGAVE_JSON_PARSER='native'
-#	fi
+	fi
 fi
 
 # }}}
@@ -227,7 +237,7 @@ function getIpAddress() {
 
 function jsonval {
 	local __resultvar=$1
-	local __temp=`echo "$2" | sed 's/\\\\\//\//g' | sed 's/[{}]//g' | awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}' | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $3| cut -d":" -f2| sed -e 's/^ *//g' -e 's/ *$//g'`
+	local __temp=`echo "$2" | sed 's/\\\\\//\//g' | sed 's/[{}]//g' | awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}' | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $3| cut -d":" -f2| sed 's/^ *//g' | sed 's/ *$//g'`
 	eval $__resultvar=`echo '${__temp##*|}'`
 }
 
@@ -255,9 +265,9 @@ function isxmlstring {
 
 function get_html_message() {
   if [[ -n $(echo "$1" | grep "<title") ]]; then
-    echo "$1" | grep -om1 "<title>[^<]*" | sed -e 's/<title>//'
+    echo "$1" | grep -om1 "<title>[^<]*" | sed 's/<title>//'
   elif [[ -n $(echo "$1" | grep "<p") ]]; then
-    echo "$1" | grep -om1 "<p>[^<]*" | sed -e 's/<p>//'
+    echo "$1" | grep -om1 "<p>[^<]*" | sed 's/<p>//'
   else
 		echo "Unexpected response from the API server."
 	fi
@@ -266,11 +276,11 @@ function get_html_message() {
 function get_xml_message() {
   #set -x
 	if [[ -n $(echo "$1" | grep -om1 "<ams:message>[^<]*") ]]; then
-		echo "$1" | grep -om1 "<ams:message>[^<]*" | sed -e 's/<ams:message>//'
+		echo "$1" | grep -om1 "<ams:message>[^<]*" | sed 's/<ams:message>//'
 	elif [[ -n $(echo "$1" | grep -om1 "<am:description>[^<]*") ]]; then
-		echo "$1" | grep -om1 "<am:description>[^<]*" | sed -e 's/<am:description>//'
+		echo "$1" | grep -om1 "<am:description>[^<]*" | sed 's/<am:description>//'
   elif [[ -n $(echo "$1" | grep "<title") ]]; then
-    echo "$1" | grep -om1 "<title>[^<]*" | sed -e 's/<title>//'
+    echo "$1" | grep -om1 "<title>[^<]*" | sed 's/<title>//'
   else
 		echo "$1"
 	fi
@@ -278,7 +288,7 @@ function get_xml_message() {
 }
 
 function to_json_error_message() {
-	printf '{"status":"error","message":"%s","result":null}' "$(echo "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\"/g')"
+	printf '{"status":"error","message":"%s","result":null}' "$(echo "$1" | sed 's/\\/\\\\/g' | sed 's/"/\"/g')"
 
 	#printf '{"status":"error","message":"%s","result":null}' "$1"
 #	echo "{\"status\":\"error\",\"message\":\"${1}\",\"result\":null}"
@@ -339,7 +349,7 @@ function jsonquery {
         if (( $veryverbose )); then
 				  echo "$1"
         else
-          apimerr=$(echo "$1" | grep -om1 '"message":"[^"]*"' | sed -e 's/"message":"//' | sed -e 's/"//')
+          apimerr=$(echo "$1" | grep -om1 '"message":"[^"]*"' | sed 's/"message":"//' | sed 's/"//')
           echo "$apimerr"
         fi
       fi
@@ -385,12 +395,12 @@ function jsonquery {
 						fbefore_noperiod="${fbefore%?}"
 
 						if [[ -z "$fbefore_noperiod" ]]; then
-									echo "$1" | jq ".[] | $fafter"
+									echo "$1" | jq -M ".[] | $fafter"
 						else
-									echo "$1" | jq "$fbefore_noperiod | .[] | $fafter"
+									echo "$1" | jq -M "$fbefore_noperiod | .[] | $fafter"
 						fi
 					else
-							echo "$1" | jq "$jpath"
+							echo "$1" | jq -M "$jpath"
 					fi
 				else
 
@@ -402,12 +412,12 @@ function jsonquery {
 						fbefore_noperiod="${fbefore%?}"
 
 						if [[ -z "$fbefore_noperiod" ]]; then
-							echo "$1" | jq -r ".[] | $fafter"
+							echo "$1" | jq -M -r ".[] | $fafter"
 						else
-							echo "$1" | jq -r "$fbefore_noperiod | .[] | $fafter"
+							echo "$1" | jq -M -r "$fbefore_noperiod | .[] | $fafter"
 						fi
 					else
-						echo "$1" | jq -r "$jpath"
+						echo "$1" | jq -M -r "$jpath"
 					fi
 				fi
 
@@ -443,7 +453,21 @@ function jsonquery {
 
 				echo "${1}" | python $DIR/python/pydotjson.py -q ${2} $stripquotes
 
-			elif [[ 'native' == "$AGAVE_JSON_PARSER" ]]; then
+            elif [[ 'python3' == "$AGAVE_JSON_PARSER" ]]; then
+
+                [[ -z "$3" ]] && stripquotes='-s'
+
+                echo "${1}" | python3 $DIR/python/pydotjson.py -q ${2} $stripquotes
+
+            elif [[ 'python2' == "$AGAVE_JSON_PARSER" ]]; then
+
+                [[ -z "$3" ]] && stripquotes='-s'
+
+                echo "${1}" | python2 $DIR/python/pydotjson.py -q ${2} $stripquotes
+
+
+
+            elif [[ 'native' == "$AGAVE_JSON_PARSER" ]]; then
 
 				oIFS="$IFS"
 				IFS="."
@@ -748,9 +772,17 @@ function json_prettyify {
 
 		echo "$@" | python $DIR/python/pydotjson.py
 
+    elif [[ 'python3' == "$AGAVE_JSON_PARSER" ]]; then
+
+        echo "$@" | python3 $DIR/python/pydotjson.py
+
+    elif [[ 'python2' == "$AGAVE_JSON_PARSER" ]]; then
+
+        echo "$@" | python2 $DIR/python/pydotjson.py
+
 	elif [[ 'jq' == "$AGAVE_JSON_PARSER" ]]; then
 
-		echo "$@" | jq -r '.'
+		echo "$@" | jq -M -r '.'
 
 	elif [[ 'json' == "$AGAVE_JSON_PARSER" ]]; then
 
@@ -972,7 +1004,7 @@ function format_iso8601_date_and_time() {
 
 	moddate=( $(echo "$iso8601" | sed 's/T.*//' | sed 's/-/ /g' | xargs -n 1) )
 	tmon=$(month_of_year ${moddate[1]})
-	tday=$(echo ${moddate[2]} | sed -e 's/^0/ /')
+	tday=$(echo ${moddate[2]} | sed 's/^0/ /')
 	tyear=${moddate[0]}
 
 	if (( format_12_hour_clock )); then
@@ -998,7 +1030,7 @@ function format_iso8601_time() {
 	[[ -n "$2" ]] && format_12_hour_clock=1
 
 	# strip iso8601 time out, removing everything after minute place
-	iso8601_time=$(echo "$1" | sed -e 's/.*T//' -e 's/\:..\....-..\:..//')
+	iso8601_time=$(echo "$1" | sed 's/.*T//' | sed 's/\:..\....-..\:..//')
 	modtime=( $( echo "$iso8601_time" | sed 's/\:/ /' | xargs -n 1) )
 	hours=${modtime[0]#0}
 	minutes=${modtime[1]}

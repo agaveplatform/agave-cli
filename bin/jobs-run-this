@@ -125,7 +125,7 @@ main() {
   if [ -z $name ]; then
     name="$username-runner"
   else
-    name=$(echo -n "${name}" | sed -e 's/[^[:alnum:]]/-/g' | tr -s '-' | tr A-Z a-z)
+    name=$(echo -n "${name}" | sed 's/[^[:alnum:]]/-/g' | tr -s '-' | tr A-Z a-z)
   fi
 
   if [ -n "$email" ]; then

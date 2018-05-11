@@ -66,7 +66,7 @@ main() {
     # remaining argumens are the uuid to be tagged
     args="${args[@]:1}"
 
-    uuids=$(echo "${args}" | sed -e 's/ /","/g')
+    uuids=$(echo "${args}" | sed 's/ /","/g')
 
     cmd="curl -sk -H \"${authheader}\" -X POST -H 'Content-Type: application/json' --data-binary  '[\"${uuids}\"]' '${hosturl}$tag_id/associations?pretty=true'"
 
