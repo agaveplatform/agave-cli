@@ -335,7 +335,7 @@ main() {
     fi
     parameter_ids=(`jsonquery "$app_description" "result.parameters.[].id"`)
     single_parameter_defaults=(`jsonquery "$app_description" "result.parameters.[].value.default" 1`)
-    parameter_defaults=(`jsonquery "$app_description" "result.parameters.[].value.default" `)
+    parameter_defaults=(`jsonquery "$app_description" "result.parameters.[].value.default" 1`)
     parameter_requireds=(`jsonquery "$app_description" "result.parameters.[].value.required"`)
     parameter_visibles=(`jsonquery "$app_description" "result.parameters.[].value.visible"`)
     parameter_types=(`jsonquery "$app_description" "result.parameters.[].value.type"`)
@@ -366,7 +366,7 @@ main() {
             # strip the array of objects to a list of strings
             tmpEnums=''
             if [[ "${parameter_types[$n]}" == 'enumeration' ]]; then
-              tmpEnums=$(jsonquery "${app_description}" "result.parameters.$n.value.enum_values")
+              tmpEnums=$(jsonquery "${app_description}" "result.parameters.$n.value.enum_values" 1)
               tmpEnums=( $(echo "$tmpEnums" | sed 's/:\([a-zA-Z0-9 \-_]*\)}/}/g' | sed 's/\]//g' | sed 's/\[//g' | sed 's/}/"/g' | sed 's/{/"/g' | sed 's/,/ /g' ) )
             fi
 
@@ -394,6 +394,9 @@ main() {
                 if [[ "$tmpDefaultsCount" -eq "$[zz+1]" ]]; then
                   tc=''
                 fi
+                # strip surrounding quotes from the raw json output. This allows us to catch empty
+                # string literals as well as nulls
+                z=$(printf '%s' $z | sed 's/"//g')
                 if [[ "${parameter_types[$n]}" == "string" ]];then
                   parameters=$(printf "%s\n      \"%s\"%s" "$parameters" "$z" "$tc")
                 elif [[ "${parameter_types[$n]}" == "enumeration" ]]; then
@@ -408,7 +411,7 @@ main() {
             elif [[ "${parameter_types[$n]}" == "string" ]]; then
               parameters=$(printf "%s\n    \"%s\": \"%s\"%s" "$parameters" "$i" "$tmpDefaults" "$trailingcomma")
             elif [[ "${parameter_types[$n]}" == "enumeration" ]]; then
-              tmpEnum=$(echo "$tmpDefaults" | sed 's///g')
+              tmpEnum=$(echo "$tmpDefaults" | sed 's/"//g')
               parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "$tmpDefaults" "$trailingcomma")
             elif [[ "${parameter_types[$n]}" == "bool" ]] || [[ "${parameter_types[$n]}" == "flag" ]]; then
               parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "true" "$trailingcomma")
@@ -445,6 +448,9 @@ main() {
                 if [[ "$tmpDefaultsCount" -eq "$[zz+1]" ]]; then
                   tc=''
                 fi
+                # strip surrounding quotes from the raw json output. This allows us to catch empty
+                # string literals as well as nulls
+                z=$(printf '%s' $z | sed 's/"//g')
                 if [[ "${parameter_types[$n]}" == "string" ]]; then
                   parameters=$(printf "%s\n      \"%s\"%s" "$parameters" "$z" "$tc")
                 elif [[ "${parameter_types[$n]}" == "enumeration" ]]; then
@@ -459,7 +465,10 @@ main() {
               parameters=$(printf "%s\n    ]%s" "$parameters" "$trailingcomma")
 
             elif [[ "${parameter_types[$n]}" == "string" ]] || [[ "${parameter_types[$n]}" == "enumeration" ]]; then
-              parameters=$(printf "%s\n    \"%s\": \"%s\"%s" "$parameters" "$i" "${parameter_defaults[$n]}" "$trailingcomma")
+              # strip surrounding quotes from the raw json output. This allows us to catch empty
+              # string literals as well as nulls
+              tmpEnum=$(printf '%s' "${parameter_defaults[$n]}" | sed 's/"//g')
+              parameters=$(printf "%s\n    \"%s\": \"%s\"%s" "$parameters" "$i" "$tmpEnum" "$trailingcomma")
             elif [[ "${parameter_types[$n]}" == "bool" ]] || [[ "${parameter_types[$n]}" == "flag" ]]; then
               if [[ "${parameter_defaults[$n]}" == 'false' ]] || [[ "${parameter_defaults[$n]}" == 'False' ]]; then
                 parameters=$(printf "%s\n    \"%s\": %s%s" "$parameters" "$i" "false" "$trailingcomma")

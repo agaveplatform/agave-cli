@@ -37,11 +37,12 @@ base url.
   -r, --restore           Sets the backed up config as current config and deletes the backup
   -s, --swap              Swaps the current and backup configs, preserving both
   -d, --developmenturl    The development tenant, ex https://sandbox.example.com
+  -H, --hosturl           URL of the service
   -f, --force             Skip all user interaction
   -i, --interactive       Prompt for values
   -q, --quiet             Quiet (no output)
-  -v, --verbose        Verbose output
-  -V, --veryverbose    Very verbose output
+  -v, --verbose           Verbose output
+  -V, --veryverbose       Very verbose output
   -h, --help              Display this help and exit
       --version           Output version information and exit
 "
@@ -229,6 +230,7 @@ while [[ $1 = -?* ]]; do
     -b|--backup) backup=1 ;;
     -r|--restore) restore=1 ;;
     -s|--swap) swap=1 ;;
+    -H|--hosturl) shift; hosturl=$1;;
     -d|--developmenturl) shift; developmenturl=$1 ;;
     -v|--verbose) verbose=1 ;;
     -V|--veryverbose) veryverbose=1; verbose=1 ;;
