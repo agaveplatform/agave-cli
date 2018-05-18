@@ -30,9 +30,9 @@ Subscribe a client to one or all apis.
   -p, --apipassword    Agave tenant password. This will override the value of AGAVE_PASSWORD in your environment.
   -N, --apiName        The name of the API to subscribe the client application to.
                        Use a wildcard to subscribe to all APIs
-  -T, --tier           The subscription tier
-  -R, --apiVersion     The version of the API to subscribe the client application to
-  -P, --apiProvider    The user who registered the API
+  -T, --tier           The subscription tier. Default: UNLIMITED
+  -R, --apiVersion     The version of the API to which to subscribe the client application. Default: v2
+  -P, --apiProvider    The user who registered the API. Default: admin
   -H, --hosturl        URL of the service
   -d, --development    Run in dev mode using default dev server
   -f, --force          Skip all user interaction
@@ -72,6 +72,14 @@ main() {
 
 		if [ -z "$tier" ]; then
 			tier='Unlimited'
+		fi
+
+		if [ -z "$apiVersion" ]; then
+			apiVersion='v2'
+		fi
+
+		if [ -z "$apiProvider" ]; then
+			apiProvider='admin'
 		fi
 
 		cmd="curl -sku \"${apiusername}:xxxx\" -X POST -d \"apiName=${apiName}&tier=${tier}&apiVersion=${apiVersion}&apiProvider=${apiProvider}\" '${hosturl}${client_name}/subscriptions?pretty=true'"
