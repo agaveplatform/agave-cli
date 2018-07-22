@@ -86,19 +86,19 @@ main() {
   querystring=""
 
   if [ -n "$args" ]; then
-      for i in "${args[@]}"
-      do
-          querystring="${querystring} --data "$(urlencode "${i}" | sed 's/%3D/=/')
-      done
+    for i in "${args[@]}"
+    do
+      querystring="${querystring} --data "$(urlencode "${i}" | sed 's/%3D/=/')
+    done
   fi
 
   cmd="curl -G -sk -H \"${authheader}\" '$hosturl?pretty=true$(pagination)' ${querystring}"
 
 	if ((veryverbose)); then
-      [ "$piped" -eq 0 ] && log "Calling $cmd"
+    [ "$piped" -eq 0 ] && log "Calling $cmd"
   fi
 
-  response=`curl -sk -H "${authheader}" "${hosturl}?pretty=true$(pagination)" ${querystring}`
+  response=`curl -G -sk -H "${authheader}" ${hosturl}?pretty=true$(pagination) $querystring`
 
 	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 		result=$(format_api_json "$response")
