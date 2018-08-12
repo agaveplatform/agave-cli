@@ -65,7 +65,23 @@ main() {
 		success "$result"
 	else
 		errorresponse=$(jsonquery "$response" "message")
-		err "$errorresponse"
+
+		# retry at the base path if this is a legacy, unregistered tenant service
+		if [[ "$errorresponse" =~ "No tenant found with id v2" ]] && [[ "${hosturl%/}" =~ (/v2)$ ]] ; then
+      hosturl=${hosturl%/}
+			hosturl=${hosturl%/v2}
+
+			retyresponse=$(main ${args})
+			# if it fails this time, fail the command
+			if (($?)); then
+				err "$retyresponse"
+			# the retry attempt succeeded, so return that
+			else
+				success "$retyresponse"
+			fi
+    else
+			err "$errorresponse"
+		fi
 	fi
 
 

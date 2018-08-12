@@ -96,25 +96,14 @@ main() {
     exit
 
   else
-    
-    # fetch tenant list from discovery service
-    cmd="curl -sk ${hosturl%/}?pretty=true&limit=1000"
-        
-    if ((veryverbose)); then
-        [ "$piped" -eq 0 ] && log "Calling $cmd"
+
+    # query for a list of tenants
+    tenantresponse=$(tenants-list -H $hosturl -V 2>&1 )
+
+    if [[ -z "$(jsonquery "${tenantresponse}" "result.[].code" 2>/dev/null)" ]]; then
+      err "No tenants found when querying the tenant service at $hosturl"
     fi
 
-    tenantresponse=`curl -sk "${hosturl%/}?pretty=true&limit=1000"`
-    
-    if ((veryverbose)); then
-        echo "$tenantresponse"
-    elif ((verbose)); then
-        echo $(jsonquery "$tenantresponse" "result.[].code")
-    fi
-    		
-    # set default tenant in case none is present in the environment
-    DEFAULT_TENANT_ID=agave.prod
-        
     oldIFS="$IFS"
     #tenantids=$(jsonquery "${tenantresponse}" "result.[].tenantId")
     IFS='
@@ -123,7 +112,31 @@ main() {
     tenantids=( $(jsonquery "${tenantresponse}" "result.[].code") )
     tenanturls=( $(jsonquery "${tenantresponse}" "result.[].baseUrl") )
     IFS="$oldIFS"
-            
+
+    # look up current tenant and baseurl to avoid resetting the context if the
+    # command is rerun, but the tenant does not change.
+    jsonval currentTenantId "$(kvget current)" "tenantid"
+    jsonval currentBaseUrl "$(kvget current)" "baseurl"
+
+
+    # set default tenant in case none is present in the environment
+    # use their current tenant as the default if it is present
+    # in the list returned from the tenants api
+    if [[ "${tenantids[@]}" =~ $currentTenantId ]]; then
+      DEFAULT_TENANT_ID=$currentTenantId
+
+    # we use the public tenant if present in the list and
+    # their current tenant is not
+    elif [[ "${tenantids[@]}" =~ "agave.prod" ]]; then
+      DEFAULT_TENANT_ID=agave.prod
+
+    # otherwise, we set to the first tenant returned from the service
+    else
+      DEFAULT_TENANT_ID=${tenantids[0]}
+    fi
+
+    echo $DEFAULT_TENANT_ID
+
     re='^[0-9]+$'
         
     if [ -z "$tenant" ]; then
@@ -177,22 +190,34 @@ main() {
   if [ -z "$tenantid" ]; then
     err "Unknown tenant id $tenant. Please provide a valid tenant id to initialize the cli."
     exit
+  else
+
+    # if the new and old tenant code and baseurl match, simply tell them they
+    # are already set up for that tenant and exit.
+    if [ "$currentTenantId" == "$tenantid" ] && [ "$currentTenantId" == "$tenantid" ]; then
+      success "You are already configured to interact with the $tenantid APIs at $baseurl"
+      exit
+
+    # they have actually switched tenants, so process the new config as needed
+    else
+      # set the dev url in case they provide one
+      if [ -z "$developmenturl" ]; then
+        devurl="http://localhost:8080"
+      fi
+
+      # backup the old config if present
+      if ((backup)); then
+        kvset backup "$(kvget current)"
+      fi
+
+      # save the tenant config. backing up the previous one
+      kvset current "{\"tenantid\":\"$tenantid\",\"baseurl\":\"$baseurl\",\"devurl\":\"$developmenturl\",\"apisecret\":\"$client_secret\",\"apikey\":\"$client_key\",\"username\":\"$apiusername\",\"access_token\":\"\",\"refresh_token\":\"\",\"created_at\":\"\",\"expires_in\":\"\"}"
+
+      success "You are now configured to interact with the $tenantid APIs at $baseurl"
+
+    fi
+
   fi
-
-  # set the dev url in case they provide one
-  if [ -z "$developmenturl" ]; then
-    devurl="http://localhost:8080"
-  fi
-
-  # backup the old config if present
-  if ((backup)); then
-    kvset backup "$(kvget current)"
-  fi
-
-  # save the tenant config. backing up the previous one
-  kvset current "{\"tenantid\":\"$tenantid\",\"baseurl\":\"$baseurl\",\"devurl\":\"$developmenturl\",\"apisecret\":\"$client_secret\",\"apikey\":\"$client_key\",\"username\":\"$apiusername\",\"access_token\":\"\",\"refresh_token\":\"\",\"created_at\":\"\",\"expires_in\":\"\"}"
-
-  success "You are now configured to interact with the APIs at $baseurl"
 }
 
 format_api_json() {
