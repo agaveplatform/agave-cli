@@ -10,9 +10,9 @@
 filter_service_url() {
 	if [[ -z $hosturl ]]; then
 		if ((development)); then 
-			hosturl="https://requestbin.agaveapi.co/"
+			hosturl="https://requestbin.agaveplatform.org/"
 		else
-			hosturl="https://requestbin.agaveapi.co/"
+			hosturl="https://requestbin.agaveplatform.org/"
 		fi
 	fi
 }

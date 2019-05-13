@@ -82,7 +82,7 @@ All notable changes to this project will be documented in this file.
 ## 2.1.0 - 2015-02-23
 ### ADDED
 - `*-addupdate` Adding support for reading from stdin to all the scripts that previously accepted only files by replacing the file name with `-`
-- `jobs-template` adding webhook url with [Agave RequestBin](http://requestbin.agaveapi.co/) valid for 24 hours created on each request.
+- `jobs-template` adding webhook url with [Agave RequestBin](http://requestbin.agaveplatform.org/) valid for 24 hours created on each request.
 - `jobs-template` added support for parsing most enum values, properly creating arrays vs primary types based on min and max cardinality, and the ability to populate with random default values, including inputs
 
 ### FIXED
