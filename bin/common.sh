@@ -188,7 +188,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 function disclaimer() {
 	out "Documentation on the Agave Platform, client libaries, and developer tools are
-available online from the Agave Website, http://developer.agaveapi.co. For
+available online from the Agave Website, http://docs.agaveplatform.org. For
 localized help of the various CLI commands, run any command with the -h
 or --help option.
 "
@@ -791,7 +791,7 @@ function json_prettyify {
 	# If all else fails, we can use the jsonparser api
 	#elif [[ -z "$AGAVE_JSON_PARSER" -o 'json-mirror' == "$AGAVE_JSON_PARSER" ]]; then
 	else
-		jsonparserresponse=$(echo "${1}" | curl -sk --globoff -X POST -H "Content-Type: application/json" --data-binary @- "https://agaveapi.co/json-mirror?pretty=true")
+		jsonparserresponse=$(echo "${1}" | curl -sk --globoff -X POST -H "Content-Type: application/json" --data-binary @- "https://agaveplatform.org/json-mirror?pretty=true")
 
 		if [ $? ]; then
 			echo -e "${jsonparserresponse}"

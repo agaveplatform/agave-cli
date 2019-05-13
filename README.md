@@ -1,9 +1,9 @@
 ## What is the Agave Platform?
 
 
-The [Agave Platform](https://agaveapi.co) is an open Science-as-a-Service platform that empowers users to run code, manage data, collaborate meaningfully, and integrate easily with the world around them. 
+The [Agave Platform](https://agaveplatform.org) is an open Science-as-a-Service platform that empowers users to run code, manage data, collaborate meaningfully, and integrate easily with the world around them. 
 
-For more information, visit the [Agave Developer’s Portal](http://developer.agaveapi.co).
+For more information, visit the [Agave Developer’s Portal](https://docs.agaveplatform.org).
 
 
 ## What is the Agave CLI
@@ -23,10 +23,10 @@ Optional dependencies
 	* jq 1.4+ (for faster JSON parsing)
 	* python 2.7.9+
 
-Clone the repository from Bitbucket and add the bin directory to your PATH and you're ready to go.
+Clone the repository from Github and add the bin directory to your PATH and you're ready to go.
 
 ```  
-git clone https://bitbucket.org/agaveapi/cli.git agave-cli  
+git clone https://github.com/agaveplatform/agave-cli.git agave-cli  
 export PATH=$PATH:`pwd`/agave-cli/bin  
 ```  
 
@@ -114,7 +114,7 @@ The CLI comes bundled with two different JSON parsers. Additionally, three other
 * `native`: This is the native Bash implementation from the [json.sh](https://github.com/dominictarr/JSON.sh) project. It is quite a bit slower than the Python implementation and does have trouble with newline characters from time to time. That being said, it's pretty awesome for a pure Bash JSON parser.
 * `json-mirror`: The [Agave JSON Mirror API](https://bitbucket.org/taccaci/agave-json-mirror) is a publicly available, free API which provides JSON pretty printing and JavaScript style dot notation querying of. It is a suitable replacement for basic java manipulation and formatting.
 
->  For a 100% bash CLI with no dependencies, use the `json-mirror` parser. That will force the CLI to call out to the [Agave JSON Mirror API](https://bitbucket.org/taccaci/agave-json-mirror) at http://agaveapi.co/json-mirror and avoid any python dependencies.
+>  For a 100% bash CLI with no dependencies, use the `json-mirror` parser. That will force the CLI to call out to the [Agave JSON Mirror API](https://bitbucket.org/taccaci/agave-json-mirror) at http://agaveplatform.org/json-mirror and avoid any python dependencies.
 
 ### Bash completion (beta)
 

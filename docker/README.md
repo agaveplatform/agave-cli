@@ -22,7 +22,7 @@ The Agave Platform ([http://agaveapi.co](http://agaveapi.co)) is an open source,
 
   *deep provenance, history, and reproducibility built in*
 
-For more information, visit the [Agave Developer’s Portal](http://agaveapi.co) at [http://agaveapi.co](http://agaveapi.co).
+For more information, visit the [Agave Developer’s Portal](https://docs.agaveplatform.org) at [https://docs.agaveplatform.org](https://docs.agaveapi.co).
 
 
 ## What is the Agave CLI
@@ -35,13 +35,13 @@ The Agave CLI is a collection of Bash shell scripts allowing you to interact wit
 The CLI is a set of interactive scripts. You can run them individually by running a separate container each time, or via an interactive terminal session.
 
 ```
-$ docker run -it --rm agaveapi/agave-cli
+$ docker run -it --rm agaveplatform/agave-cli
 ```  
   
 You need to initialize your environment prior to using the CLI. This will create a cache file holding your session authentication info, api keys, and API endpoints. Rather than repeat this every time you run the container, we recommend creating a local directory to hold the cache info and attaching it as a volume.
 
 ```
-$ docker run -it --rm -v `$HOME`/.agave:/agave agaveapi/agave-cli  
+$ docker run -it --rm -v `$HOME`/.agave:/agave agaveplatform/agave-cli  
 ```    
   
 ## Getting started
@@ -49,7 +49,7 @@ $ docker run -it --rm -v `$HOME`/.agave:/agave agaveapi/agave-cli
 From here on, we assume you are running an interactive container with the following command. All future commands are given inside the container's interactive shell. We will start the container with a local cache directory attached as a volume.
 
 ```
-docker run -it --rm -v `$HOME`/.agave:/agave agaveapi/agave-cli  
+docker run -it --rm -v `$HOME`/.agave:/agave agaveplatform/agave-cli  
 ```  
   
 We assume you either set or will replace the following environment variables:  

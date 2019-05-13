@@ -508,7 +508,7 @@ main() {
       fi
       requestbin=$(requestbin-create -v)
       requestbin_id=$(jsonquery "$requestbin" "name")
-      webhookurl="https://requestbin.agaveapi.co/${requestbin_id}?job_id=\${JOB_ID}&status=\${JOB_STATUS}"
+      webhookurl="https://requestbin.agaveplatform.org/${requestbin_id}?job_id=\${JOB_ID}&status=\${JOB_STATUS}"
 
       if ((verbose)); then
         [ "$piped" -eq 0 ] && log "Creating notifications..."

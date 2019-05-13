@@ -3,12 +3,12 @@
 # Agave CLI Image
 # Tag: agave-cli
 #
-# https://bitbucket.org/agaveapi/cli
+# https://github.com/agaveplatform/agave-cli
 #
 # This is the official image for the Agave CLI and can be used for
 # parallel environment testing.
 #
-# docker run -it -v $HOME/.agave:/agave agaveapi/cli bash
+# docker run -it -v $HOME/.agave:/agave agaveplatform/cli bash
 #
 ######################################################
 
@@ -103,7 +103,7 @@ ENV TERM xterm
 COPY . $AGAVE_CLI_HOME
 
 # init public denant by default
-RUN auth-switch -b https://public.agaveapi.co -t agave.prod -S
+RUN auth-switch -b https://sandbox.agaveplatform.org -t sandbox -S
 
 # shipping a static binary to save some build time. uncomment to rebuild binary from source
 #RUN apt-get install -y golang && \
