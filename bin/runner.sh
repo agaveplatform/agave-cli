@@ -2,7 +2,7 @@
 #
 # runner.sh
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # Main processing logic for the scripts
 #set -x

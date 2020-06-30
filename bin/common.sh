@@ -2,7 +2,7 @@
 #
 # common.sh
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # Common helper functions and global variables for all cli scripts.
 # A lot of this is based on options.bash by Daniel Mills.
@@ -11,12 +11,12 @@
 # init the parent directory variable if not already present
 # this is needed when sourcing this script directly from
 # outside the CLI scripts.
-if [[ -z "$DIR" ]]; then
-	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-fi
+#if [[ -z "$CLI_BIN_DIR" ]]; then
+	CLI_BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#fi
 
 # add keyvalue support
-source $DIR/kv-bash
+source $CLI_BIN_DIR/kv-bash
 
 # update the old cache to the new key-value format if present
 if [ -f "$HOME/.agave" ]; then
@@ -38,15 +38,15 @@ fi
 version="v2"
 release="2.2.11"
 revision=""
-if [ -e "$DIR/../.git" ];
+if [ -e "$CLI_BIN_DIR/../.git" ];
 then
-  revision=$(git --git-dir=$DIR/../.git rev-parse --short HEAD)
+  revision=$(git --git-dir=$CLI_BIN_DIR/../.git rev-parse --short HEAD)
   if [[ -n "$revision" ]];
   then
     revision="${version}-r$revision"
-  elif [ -e "$DIR/../.git/refs/heads/master" ];
+  elif [ -e "$CLI_BIN_DIR/../.git/refs/heads/master" ];
   then
-    revision="${version}-r$(git --git-dir=$DIR/../.git rev-parse --short HEAD)"
+    revision="${version}-r$(git --git-dir=$CLI_BIN_DIR/../.git rev-parse --short HEAD)"
   else
     revision="${version}"
   fi
@@ -379,7 +379,7 @@ function jsonquery {
 
 			if [[ 'json-mirror' == "$AGAVE_JSON_PARSER" ]]; then
 
-				$DIR/json-mirror.sh "${1}" "$2" "$3"
+				$CLI_BIN_DIR/json-mirror.sh "${1}" "$2" "$3"
 
 			elif [[ 'jq' == "$AGAVE_JSON_PARSER" ]]; then
 
@@ -451,19 +451,19 @@ function jsonquery {
 
 				[[ -z "$3" ]] && stripquotes='-s'
 
-				echo "${1}" | python $DIR/python/pydotjson.py -q ${2} $stripquotes
+				echo "${1}" | python $CLI_BIN_DIR/python/pydotjson.py -q ${2} $stripquotes
 
             elif [[ 'python3' == "$AGAVE_JSON_PARSER" ]]; then
 
                 [[ -z "$3" ]] && stripquotes='-s'
 
-                echo "${1}" | python3 $DIR/python/pydotjson.py -q ${2} $stripquotes
+                echo "${1}" | python3 $CLI_BIN_DIR/python/pydotjson.py -q ${2} $stripquotes
 
             elif [[ 'python2' == "$AGAVE_JSON_PARSER" ]]; then
 
                 [[ -z "$3" ]] && stripquotes='-s'
 
-                echo "${1}" | python2 $DIR/python/pydotjson.py -q ${2} $stripquotes
+                echo "${1}" | python2 $CLI_BIN_DIR/python/pydotjson.py -q ${2} $stripquotes
 
 
 
@@ -504,10 +504,10 @@ function jsonquery {
 				escpatharray='\['${escpatharray}'\]'
 
 				if [ -z "$3" ]; then
-					echo "$1" | $DIR/json.sh -p | egrep "$patharray" | sed s/"$escpatharray"//g | sed 's/^[ \t]*//g' | sed s/\"//g
+					echo "$1" | $CLI_BIN_DIR/json.sh -p | egrep "$patharray" | sed s/"$escpatharray"//g | sed 's/^[ \t]*//g' | sed s/\"//g
 				else
 					# third argument says to leave the response quoted
-					echo "$1" | $DIR/json.sh -p | egrep "$patharray" | sed s/"$escpatharray"//g
+					echo "$1" | $CLI_BIN_DIR/json.sh -p | egrep "$patharray" | sed s/"$escpatharray"//g
 				fi
 				unset patharray
 				unset escpatharray
@@ -686,8 +686,8 @@ function get_auth_header() {
             echo "Authorization: Bearer $access_token"
         fi
     else
-		if [[ -f "$DIR/auth-filter.sh" ]]; then
-		  echo $(source $DIR/auth-filter.sh);
+		if [[ -f "$CLI_BIN_DIR/auth-filter.sh" ]]; then
+		  echo $(source $CLI_BIN_DIR/auth-filter.sh);
 		else
 		  echo " -u \"${username}:${password}\" "
 		fi
@@ -729,13 +729,13 @@ currentconfig=$(kvget current)
 
 if [[ "auth-switch" != "$calling_cli_command" ]] && [[ "tenants-init" != "$calling_cli_command" ]] && [[ "tenants-list" != "$calling_cli_command" ]]; then
   if [[ -z $currentconfig ]]; then
-    err "Please run $DIR/tenants-init to initialize your client before attempting to interact with the APIs."
+    err "Please run $CLI_BIN_DIR/tenants-init to initialize your client before attempting to interact with the APIs."
     exit
   fi
 
   baseurl=$(jsonquery "$currentconfig" "baseurl")
   if  [[ -z $baseurl ]]; then
-    err "Please run $DIR/tenants-init to configure your client endpoints before attempting to interact with the APIs."
+    err "Please run $CLI_BIN_DIR/tenants-init to configure your client endpoints before attempting to interact with the APIs."
     exit
   else
     baseurl="${baseurl%/}"
@@ -751,7 +751,7 @@ if [[ "auth-switch" != "$calling_cli_command" ]] && [[ "tenants-init" != "$calli
 
   tenantid=$(jsonquery "$currentconfig" "tenantid")
   if [[ -z "$tenantid" ]]; then
-    err "Please run $DIR/tenants-init to configure your client id before attempting to interact with the APIs."
+    err "Please run $CLI_BIN_DIR/tenants-init to configure your client id before attempting to interact with the APIs."
     exit
   fi
 fi
@@ -770,15 +770,15 @@ function json_prettyify {
 	# Look for custom json parsers
 	if [[ 'python' == "$AGAVE_JSON_PARSER" ]]; then
 
-		echo "$@" | python $DIR/python/pydotjson.py
+		echo "$@" | python $CLI_BIN_DIR/python/pydotjson.py
 
     elif [[ 'python3' == "$AGAVE_JSON_PARSER" ]]; then
 
-        echo "$@" | python3 $DIR/python/pydotjson.py
+        echo "$@" | python3 $CLI_BIN_DIR/python/pydotjson.py
 
     elif [[ 'python2' == "$AGAVE_JSON_PARSER" ]]; then
 
-        echo "$@" | python2 $DIR/python/pydotjson.py
+        echo "$@" | python2 $CLI_BIN_DIR/python/pydotjson.py
 
 	elif [[ 'jq' == "$AGAVE_JSON_PARSER" ]]; then
 
@@ -846,7 +846,7 @@ function auto_auth_refresh
 				echo "${result}"
 
 				# The command call below here also works, if un-commented. But perhaps the above is preferable?
-				#( /bin/bash $DIR/auth-tokens-refresh )
+				#( /bin/bash $CLI_BIN_DIR/auth-tokens-refresh )
 			fi
 		fi
 	fi

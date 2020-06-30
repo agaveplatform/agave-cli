@@ -2,7 +2,7 @@
 #
 # requestbin-create
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # This script is part of the Agave API command line interface (CLI).
 # It create an ephimeral requestbin using Agave's hosted service.

@@ -14,7 +14,7 @@
 
 FROM ubuntu:trusty
 
-MAINTAINER Rion Dooley <dooley@tacc.utexas.edu>
+MAINTAINER Rion Dooley <deardooley@gmail.com>
 
 RUN apt-get update && \
     apt-get install -y git vim.tiny curl jq && \
