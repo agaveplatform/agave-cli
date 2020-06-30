@@ -2,7 +2,7 @@
 #
 # files-list
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # This script is part of the Agave API command line interface (CLI).
 # It retrieves a file listing on a remote system. If no  jobs. Optionally, one can search by name, tag,
@@ -72,7 +72,7 @@ main() {
 		[ "$piped" -eq 0 ] && log "Calling $cmd"
 	fi
 
-	response=`curl -sk -H "${authheader}" "${hosturl}?pretty=true$(pagination)"`
+	response=$(curl -sk -H "${authheader}" "${hosturl}?pretty=true$(pagination)")
 
 	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 
@@ -230,7 +230,7 @@ lsify () {
         else
           echo -e "${up}\t${username}\t${lengths[$n]}\t${formatteddate}\t$i"
         fi
-        n=$[n+1]
+        n=$((n+1))
     done
 
 }

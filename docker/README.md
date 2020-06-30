@@ -1,6 +1,6 @@
 ## What is the Agave Platform?
 
-The Agave Platform ([http://agaveapi.co](http://agaveapi.co)) is an open source, science-as-a-service API platform for powering your digital lab. Agave allows you to bring together your public, private, and shared high performance computing (HPC), high throughput computing (HTC), Cloud, and Big Data resources under a single, web-friendly REST API.
+The Agave Platform ([https://agaveplatform.org](https://agaveplatform.org)) is an open source, science-as-a-service API platform for powering your digital lab. Agave allows you to bring together your public, private, and shared high performance computing (HPC), high throughput computing (HTC), Cloud, and Big Data resources under a single, web-friendly REST API.
 
 * Run scientific codes
 
@@ -22,7 +22,7 @@ The Agave Platform ([http://agaveapi.co](http://agaveapi.co)) is an open source,
 
   *deep provenance, history, and reproducibility built in*
 
-For more information, visit the [Agave Developer’s Portal](https://docs.agaveplatform.org) at [https://docs.agaveplatform.org](https://docs.agaveapi.co).
+For more information, visit the [Agave Developer’s Portal](https://docs.agaveplatform.org) at [https://docs.agaveplatform.org](https://docs.agaveplatform.org).
 
 
 ## What is the Agave CLI

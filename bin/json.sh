@@ -2,7 +2,7 @@
 # 
 # json.sh
 # 
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # a pipeable JSON parser written in Bash based on the work 
 # of AJ ONeal.

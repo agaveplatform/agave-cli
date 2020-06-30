@@ -95,7 +95,7 @@ def main():
 
             #json_path = json_path.replace('[','').replace(']','').replace('..', '.')
 
-            json_path = json_path.strip('[]').strip('.');
+            json_path = json_path.strip('[]').strip('.')
             json_path = re.sub(r'\.\[(\d+)\]', '[\1]', json_path, flags=re.IGNORECASE)
             json_path = re.sub(r'\.\[(.+)\]', '[\'\1\']', json_path, flags=re.IGNORECASE)
             json_path = re.sub(r'\[\]\.', '.[].', json_path, flags=re.IGNORECASE)

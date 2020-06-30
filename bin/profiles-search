@@ -2,7 +2,7 @@
 #
 # profiles-search
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # This script is part of the Agave API command line interface (CLI).
 # It searches user profiles by field using agave's json sql syntax.

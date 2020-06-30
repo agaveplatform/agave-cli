@@ -2,7 +2,7 @@
 # 
 # uuid-common.sh
 # 
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # URL filter for uuid lookup services
 #

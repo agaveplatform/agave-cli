@@ -2,7 +2,7 @@
 #
 # clients-common.sh
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # URL filter for client registration services
 #

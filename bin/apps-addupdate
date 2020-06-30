@@ -2,7 +2,7 @@
 #
 # apps-addupdate
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # This script is part of the Agave API command line interface (CLI).
 # It registers or updates an existing registered application. If
@@ -75,7 +75,7 @@ main() {
 
   else
 
-    # reading from stdin
+		# reading from stdin
     if [[ "$filetoupload" == "-"  ]]; then
 
       cmd="curl --globoff -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X POST --data-binary @- '${hosturl}${args}?pretty=true'"
