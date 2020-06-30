@@ -68,7 +68,7 @@ main() {
 
 		# retry at the base path if this is a legacy, unregistered tenant service
 		if [[ "$errorresponse" =~ "No tenant found with id v2" ]] && [[ "${hosturl%/}" =~ (/v2)$ ]] ; then
-      hosturl=${hosturl%/}
+			hosturl=${hosturl%/}
 			hosturl=${hosturl%/v2}
 
 			retyresponse=$(main ${args})
