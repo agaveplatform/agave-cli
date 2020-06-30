@@ -1,6 +1,20 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 2.2.27 - 2020-06-30
+### ADDED
+- No changes.
+
+### FIXED
+- Udpated project urls to switch to agaveplatform.org domain.
+- Updated reqeustbin url.
+- Invalid search field in jobs-search listing.
+- Expanded support for tabular formatting.
+- Expanded support for apps, jobs, and files command bash completions
+
+### REMOVED
+- Transforms api commands.
+
 
 ## 2.2.6.0 - 2017-11-09
 ### ADDED

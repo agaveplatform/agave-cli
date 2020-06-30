@@ -85,6 +85,8 @@ if [[ -z "$AGAVE_JSON_PARSER" ]]; then
 
 	if (( $(command_exists "jq") )); then
 		AGAVE_JSON_PARSER='jq'
+	elif hash python3 2>/dev/null; then
+		AGAVE_JSON_PARSER='python3'
 	elif hash python 2>/dev/null; then
 		AGAVE_JSON_PARSER='python'
 	else

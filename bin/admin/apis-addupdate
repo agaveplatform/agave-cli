@@ -1,11 +1,13 @@
 #!/bin/bash
 #
-# transforms-list
+# apis-addupdate
 #
-# author: dooley@tacc.utexas.edu
+# author: deardooley@gmail.com
 #
 # This script is part of the Agave API command line interface (CLI).
-# It retrieves a list of one or more registered trasforms from the api
+# It registers or updates an existing registered api. If
+# registering a new apilication, no api id should be provided. If
+# updating an existing api, an api id must be provided.
 #
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -16,19 +18,21 @@ source "$DIR/common.sh"
 
 # A list of all variables to prompt in interactive mode. These variables HAVE
 # to be named exactly as the longname option definition in usage().
-interactive_opts=(apisecret apikey)
+interactive_opts=(access_token filetoupload)
 
 # Print usage
 usage() {
   echo -n "$(basename $0) [OPTION]...
-$(basename $0) [OPTION]... [TRANSFORM_ID]
+$(basename $0) [OPTION]... [APP_ID]
 
-List all transforms available to the authenticated user.
+Registers or updates an existing registered api. If registering a
+new api, no api id should be provided. If updating an
+existing api, an api id must be provided.
 
  Options:
   -z, --access_token    Access token
-  -l, --limit           Maximum number of results to return
-  -o, --offset          Number of results to skip from the start
+  -F, --filetoupload    The file containing the JSON api description to submit
+                        Use - to read from STDIN and when piping
       --filter          Comma separated list of fields to return in the response
   -H, --hosturl         URL of the service
   -d, --development     Run in dev mode using default dev server
@@ -48,34 +52,65 @@ List all transforms available to the authenticated user.
 ##################################################################
 ##################################################################
 
-source "$DIR/transforms-common.sh"
+source "$DIR/apis-common.sh"
 
 main() {
 	#echo -n
 	#set -x
 
-	hosturl=${hosturl%/}
-	if [ -n "$args" ]; then
-		transformsurl="${hosturl}/${args}"
-	else
-		transformsurl="$hosturl"
-	fi
+  if [[ -z "$filetoupload" ]]; then
 
-	cmd="curl -sk -H \"${authheader}\" '${transformsurl}?pretty=true$(pagination)'"
+    response="Please provide a valid api description with the -F option."
+    err "$response"
 
-	if ((veryverbose)); then
-		[ "$piped" -eq 0 ] && log "Calling $cmd"
-	fi
+  elif [[ -d "$filetoupload" ]]; then
 
-	response=`curl -sk -H "${authheader}" "${transformsurl}?pretty=true$(pagination)"`
+    response="Directory input is not supported"
+    err "$response"
 
-	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
-		result=$(format_api_json "$response")
-		success "$result"
-	else
-		errorresponse=$(jsonquery "$response" "message")
-		err "$errorresponse"
-	fi
+  elif [[ ! -e "$filetoupload" ]] && [[ "$filetoupload" != "-" ]]; then
+
+    response="No api description found at $filetoupload"
+    err "$response"
+
+  else
+
+    # reading from stdin
+    if [[ "$filetoupload" == "-"  ]]; then
+
+      cmd="curl --globoff -sk -H \"${authheader}\" -H \"Content-Type: application/json\" -X POST --data-binary @- '${hosturl}${args}?pretty=true'"
+
+      if ((veryverbose)); then
+        [ "$piped" -eq 0 ] && log "Calling $cmd"
+      fi
+
+      # make sure we specify content type as application/json
+      response=`curl --globoff -sk -H "${authheader}" -H "Content-Type: application/json" -X POST --data-binary @- "${hosturl}${args}?pretty=true"`
+
+    # standard file upload
+    else
+
+      cmd="curl -sk -H \"${authheader}\" -X POST -F \"fileToUpload=@$filetoupload\" '${hosturl}${args}?pretty=true'"
+
+      if ((veryverbose)); then
+          [ "$piped" -eq 0 ] && log "Calling $cmd"
+        fi
+
+      response=`curl -sk -H "${authheader}" -X POST -F "fileToUpload=@$filetoupload" "${hosturl}${args}?pretty=true"`
+
+    fi
+
+
+  	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
+  		result=$(format_api_json "$response")
+  		success "$result"
+  	else
+        jsonval response_message "$response" "message"
+        errorresponse=$(jsonquery "$response" "message")
+        err "$errorresponse"
+  	fi
+
+  fi
 }
 
 format_api_json() {
@@ -85,12 +120,13 @@ format_api_json() {
 	elif [[ $verbose -eq 1 ]]; then
 		result=$(jsonquery "$1" "result" 1)
 		json_prettyify "${result}"
-	elif [ -n "$args" ]; then
-		result=$(jsonquery "$1" "result.name")
-		echo "${result}"
 	else
-		result=$(jsonquery "$1" "result.[].name")
-		echo "${result}"
+		if [ -z "$args" ]; then
+			api_id=$(jsonquery "$1" "result.id")
+			success "Successfully added api $api_id"
+		else
+			success "Successfully updated api $args"
+		fi
 	fi
 }
 
@@ -109,7 +145,7 @@ source "$DIR/options.sh"
 # Main loop {{{
 
 # Print help if no arguments were passed.
-#[[ $# -eq 0 ]] && set -- "--help"
+[[ $# -eq 0 ]] && set -- "-i"
 
 # Read the options and set stuff
 while [[ $1 = -?* ]]; do
@@ -117,10 +153,9 @@ while [[ $1 = -?* ]]; do
     -h|--help) usage >&2; safe_exit ;;
     --version) version; copyright; disclaimer; safe_exit ;;
     -z|--access_token) shift; access_token=$1 ;;
-    -l|--limit) shift; limit=$1;;
-    -o|--offset) shift; offset=$1;;
-    --filter) shift; responsefilter=$1 ;;
-    -H|--hosturl) shift; hosturl=$1;;
+    -F|--filetoupload) shift; filetoupload=$1 ;;
+    --filter) shift; responsefilter=$1;;
+    -H|--hosturl) shift; hosturl=$1 ;;
   	-d|--development) development=1 ;;
     -v|--verbose) verbose=1 ;;
     -V|--veryverbose) veryverbose=1; verbose=1 ;;
