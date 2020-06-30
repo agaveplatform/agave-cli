@@ -24,14 +24,14 @@
 #   "no"  - Disable autocomplete (default)
 #   "yes" - Autocomplete file and folder names
 #
-
 CLI_DIR=$(dirname `which clients-create`)
 
 shopt -s extglob
 
+
 # Handles cache lookup and invalidation for app listing completion checks
 _check_cache() {
-#    set -x
+
     source $(which kv-bash)
     local _response _resource _partial _cmd
 
