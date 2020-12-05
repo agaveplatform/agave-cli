@@ -93,6 +93,7 @@ The Agave CLI is broken down into the following groups of scripts
 	- systems*        query, monitor, and manage systems
 	- tags*           create and manage resource tags
 	- tenants*        query and initialize the CLI for your tenant
+	- transfers*      alternative CLI commands to manage the transfer of files
 	- transforms*     convert data to/from known data formats
 	- uuid*           lookup and expand one or more Agave UUID
 

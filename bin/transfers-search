@@ -48,3 +48,115 @@ This will search the individual transfer tasks for a specific transfer request.
 #						Begin Script Logic						 #
 ##################################################################
 ##################################################################
+
+
+source "$DIR/transfers-common.sh"
+
+main() {
+	#echo -n
+	#set -x
+
+	if [ -z "$args" ]; then
+		err "Please specify a transfer for which to retrieve the tasks"
+	else
+
+    cmd="$(do_curl) -sk -H \"${authheader}\" '$hosturl$args/history?pretty=true$(pagination)'"
+
+		if ((veryverbose)); then
+			[ "$piped" -eq 0 ] && log "Calling $cmd"
+		fi
+
+		response=`curl -sk -H "${authheader}" "${hosturl}${args}/history?pretty=true$(pagination)"`
+
+		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
+
+      result=$(format_api_json "$response")
+			success "$result"
+
+      if ((watch)); then
+        completed=$(jsonquery "$response" "result.[].status" | grep "FINISHED\|FAILED" | grep -v "ARCHIVING")
+        if [[ -z "$completed" ]]; then
+          sleep 5
+          main
+        else
+          echo "Terminating watch"
+        fi
+      fi
+		else
+			errorresponse=$(jsonquery "$response" "message")
+			err "$errorresponse"
+		fi
+	fi
+
+}
+
+format_api_json() {
+
+  if ((watch)); then
+    clear
+    echo "Watching job $args"
+    date
+  fi
+
+	if ((veryverbose)); then
+		echo "$1"
+	elif [[ $verbose -eq 1 ]]; then
+		result=$(jsonquery "$1" "result" 1)
+		json_prettyify "${result}"
+	else
+        id=$(jsonquery "$1" "result.[].id")
+        timestamp=$(jsonquery "$1" "result.[].last_updated")
+        sources=$(jsonquery "$1" "result.[].source")
+        dests=$(jsonquery "$1" "result.[].dest")
+        statuses=$(jsonquery "$1" "result.[].status")
+
+		echo "${result}"
+	fi
+}
+
+##################################################################
+##################################################################
+#						End Script Logic						 #
+##################################################################
+##################################################################
+
+# }}}
+
+# Parse command line options
+source "$DIR/options.sh"
+
+# Main loop {{{
+
+# Print help if no arguments were passed.
+#[[ $# -eq 0 ]] && set -- "--help"
+
+# Read the options and set stuff
+while [[ $1 = -?* ]]; do
+  case $1 in
+    -h|--help) usage >&2; safe_exit ;;
+    --version) out "Agave (cli) v${api_release}.${version}"; safe_exit ;;
+    -z|--access_token) shift; access_token=$1 ;;
+    -W| --watch) watch=1;;
+    -l|--limit) shift; limit=$1;;
+    -o|--offset) shift; offset=$1;;
+    --filter) shift; responsefilter=$1 ;;
+    -H|--hosturl) shift; hosturl=$1;;
+  	-d|--development) development=1 ;;
+    -v|--verbose) verbose=1 ;;
+    -V|--veryverbose) veryverbose=1; verbose=1 ;;
+    -q|--quiet) quiet=1 ;;
+    -i|--interactive) interactive=1 ;;
+    -f|--force) force=1 ;;
+    --endopts) shift; break ;;
+    *) die "invalid option: $1" ;;
+  esac
+  shift
+done
+
+# Store the remaining part as arguments.
+args+=("$@")
+
+# }}}
+
+# Run the script logic
+source "$DIR/runner.sh"
