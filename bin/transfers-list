@@ -66,21 +66,21 @@ main() {
     querystring="${querystring}&status=$status"
   fi
 
-  cmd="$(do_curl) -sk -H \"${authheader}\" '$transfersurl?${querystring}$(pagination)'"
-
+#  cmd="curl -sk -H \"${authheader}\" '$transfersurl?${querystring}$(pagination)'"
+  cmd="curl -sk -H \"${authheader}\" '$transfersurl?${querystring}$(pagination)'"
 	if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
 	response=`curl -sk -H "${authheader}" "$transfersurl?${querystring}$(pagination)"`
 
-	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
-		result=$(format_api_json "$response")
-		success "$result"
-	else
-		errorresponse=$(jsonquery "$response" "message")
-		err "$errorresponse"
-	fi
+#	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
+#		result=$(format_api_json "$response")
+#		success "$result"
+#	else
+#		errorresponse=$(jsonquery "$response" "message")
+#		err "$errorresponse"
+#	fi
 }
 
 format_api_json() {

@@ -60,7 +60,7 @@ main() {
 		err "Please specify a transfer for which to retrieve the tasks"
 	else
 
-    cmd="$(do_curl) -sk -H \"${authheader}\" '$hosturl$args/history?pretty=true$(pagination)'"
+    cmd="curl -sk -H \"${authheader}\" '$hosturl$args/history?pretty=true$(pagination)'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
