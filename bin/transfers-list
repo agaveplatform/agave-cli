@@ -26,7 +26,6 @@ List past, current, or a specific data transfer. Results may be paginated.
 
  Options:
   -z, --access_token	Access token
-  -s, --status			  Search for transfer by status
   -l, --limit         Maximum number of results to return
   -o, --offset        Number of results to skip from the start
       --filter        Comma separated list of fields to return in the response
@@ -61,18 +60,13 @@ main() {
 		transfersurl="$hosturl/"
 	fi
 
-  querystring="pretty=true"
-  if [ -n "$status" ]; then
-    querystring="${querystring}&status=$status"
-  fi
-
 #  cmd="curl -sk -H \"${authheader}\" '$transfersurl?${querystring}$(pagination)'"
-  cmd="curl -sk -H \"${authheader}\" '$transfersurl?${querystring}$(pagination)'"
+  cmd="curl -sk -H \"${authheader}\" '$transfersurl?pretty=true'"
 	if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-	response=`curl -sk -H "${authheader}" "$transfersurl?${querystring}$(pagination)"`
+	response=`curl -sk -H "${authheader}" "$transfersurl?pretty=true"`
 
 #	if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 #		result=$(format_api_json "$response")
@@ -133,7 +127,6 @@ while [[ $1 = -?* ]]; do
     -h|--help) usage >&2; safe_exit ;;
     --version) version; copyright; disclaimer; safe_exit ;;
     -z|--access_token) shift; access_token=$1 ;;
-    -s|--status) shift; status=$1 ;;
     -l|--limit) shift; limit=$1;;
     -o|--offset) shift; offset=$1;;
     --filter) shift; responsefilter=$1 ;;

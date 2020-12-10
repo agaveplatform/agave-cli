@@ -22,15 +22,10 @@ interactive_opts=(apisecret apikey)
 usage() {
   echo -n "$(basename $0) [OPTION]... [JOB_ID]
 
-This will delete a specific transfer request or multiple transfer requests.
+This will delete a specific uuid of a transfer request.
 
  Options:
   -z, --access_token  Access token
-  -W, --watch         Watches the job history, updating every few seconds
-                      until the job reaches a terminal state.
-  -l, --limit         Maximum number of results to return
-  -o, --offset        Number of results to skip from the start
-      --filter          Comma separated list of fields to return in the response
   -H, --hosturl       URL of the service
   -d, --development   Run in dev mode using default dev server
   -f, --force         Skip all user interaction
@@ -60,43 +55,39 @@ main() {
 		err "Please specify a transfer for which to delete the task(s)"
 	else
 
-    cmd="curl -sk -H \"${authheader}\" '$hosturl$args/history?pretty=true$(pagination)'"
+    cmd="curl -sk -H \"${authheader}\" -X DELETE '$hosturl$args?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-		response=`curl -sk -H "${authheader}" "${hosturl}${args}/history?pretty=true$(pagination)"`
+		response=`curl -sk -H "${authheader}" -X DELETE "${hosturl}${args}"`
+
+		if ((veryverbose)); then
+			[ "$piped" -eq 0 ] && log "Calling $cmd"
+		fi
+
 
 		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 
       result=$(format_api_json "$response")
 			success "$result"
 
-      if ((watch)); then
-        completed=$(jsonquery "$response" "result.[].status" | grep "FINISHED\|FAILED" | grep -v "ARCHIVING")
-        if [[ -z "$completed" ]]; then
-          sleep 5
-          main
-        else
-          echo "Terminating watch"
-        fi
-      fi
+		response=`curl -sk -H "${authheader}" -X DELETE "${hosturl}${args}"`
+
+		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
+			result=$(format_api_json "$response")
+			success "$result"
 		else
 			errorresponse=$(jsonquery "$response" "message")
 			err "$errorresponse"
 		fi
+
 	fi
 
 }
 
 format_api_json() {
-
-  if ((watch)); then
-    clear
-    echo "Watching job $args"
-    date
-  fi
 
 	if ((veryverbose)); then
 		echo "$1"
@@ -104,13 +95,7 @@ format_api_json() {
 		result=$(jsonquery "$1" "result" 1)
 		json_prettyify "${result}"
 	else
-        id=$(jsonquery "$1" "result.[].id")
-        timestamp=$(jsonquery "$1" "result.[].last_updated")
-        sources=$(jsonquery "$1" "result.[].source")
-        dests=$(jsonquery "$1" "result.[].dest")
-        statuses=$(jsonquery "$1" "result.[].status")
-
-		echo "${result}"
+		echo "Successfully deleted ${args}"
 	fi
 }
 
@@ -136,10 +121,6 @@ while [[ $1 = -?* ]]; do
     -h|--help) usage >&2; safe_exit ;;
     --version) out "Agave (cli) v${api_release}.${version}"; safe_exit ;;
     -z|--access_token) shift; access_token=$1 ;;
-    -W| --watch) watch=1;;
-    -l|--limit) shift; limit=$1;;
-    -o|--offset) shift; offset=$1;;
-    --filter) shift; responsefilter=$1 ;;
     -H|--hosturl) shift; hosturl=$1;;
   	-d|--development) development=1 ;;
     -v|--verbose) verbose=1 ;;

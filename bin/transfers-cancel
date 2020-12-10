@@ -5,7 +5,9 @@
 # author: ertanner@chapman.edu
 #
 # This script is part of the Agave API command line interface (CLI).
-# It will delete the job
+# It will cancel the job
+#
+# This is NOT implemented YET !!!!
 #
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

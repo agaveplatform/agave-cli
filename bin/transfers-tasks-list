@@ -61,14 +61,13 @@ main() {
 		err "Please specify a transfer for which to retrieve the tasks"
 	else
 
-#    cmd="curl -sk -H \"${authheader}\" '$hosturl$args/history?pretty=true$(pagination)'"
-    cmd="curl -sk -H \"${authheader}\" '$hosturl$args/history?pretty=true$(pagination)'"
+    cmd="curl -sk -H \"${authheader}\" '$hosturl$args/history?pretty=true'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
 		fi
 
-		response=`curl -sk -H "${authheader}" "${hosturl}${args}/history?pretty=true$(pagination)"`
+		response=`curl -sk -H "${authheader}" "${hosturl}${args}/history?pretty=true"`
 
 		if [[ $(jsonquery "$response" "status") = 'success' ]]; then
 
@@ -89,7 +88,6 @@ main() {
 			err "$errorresponse"
 		fi
 	fi
-
 }
 
 format_api_json() {
