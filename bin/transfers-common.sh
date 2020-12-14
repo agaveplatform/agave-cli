@@ -10,10 +10,9 @@
 filter_service_url() {
 	if [[ -z $hosturl ]]; then
 		if ((development)); then
-			hosturl="$devurl/transfers/"
+			hosturl="$devurl/api/transfers/"
 		else
-			hosturl="$baseurl/transfers/$version/"
+			hosturl="$baseurl/api/transfers/$version/"
 		fi
 	fi
 }
-el
