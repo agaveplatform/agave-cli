@@ -121,6 +121,11 @@ while [[ $1 = -?* ]]; do
   case $1 in
     -h|--help) usage >&2; safe_exit ;;
     --version) version; copyright; disclaimer; safe_exit ;;
+    -W, --watch         Watches the job history, updating every few seconds
+                        until the job reaches a terminal state.
+    -l, --limit         Maximum number of results to return
+    -o, --offset        Number of results to skip from the start
+        --filter        Comma separated list of fields to return in the response
     -z|--access_token) shift; access_token=$1 ;;
     -S|--systemId) shift; systemId=$1 ;;
     -P|--print) print=$1 ;;
