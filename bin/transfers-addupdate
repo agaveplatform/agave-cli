@@ -60,13 +60,17 @@ main() {
 		err "Please specify a valid file path to download."
 	else
 
+#		if [ -n "$systemId" ]; then
+#			filesurl="${hosturl}api/transfers/${args}?pretty=true"
+#		else
+#			filesurl="${hosturl}api/transfers/${args}?pretty=true"
+#		fi
 		if [ -n "$systemId" ]; then
-			filesurl="${hosturl}api/transfers/${args}?pretty=true"
+			filesurl="${hosturl}api/transfers/?pretty=true"
 		else
-			filesurl="${hosturl}api/transfers/${args}?pretty=true"
+			filesurl="${hosturl}api/transfers/?pretty=true"
 		fi
-
-		cmd="curl -sk -H \"${authheader}\" -X POST '${filesurl}'"
+		cmd="curl -sk -H \"${authheader}\" -X POST '${filesurl}' --data '{${args}}'"
 
 		if ((veryverbose)); then
 			[ "$piped" -eq 0 ] && log "Calling $cmd"
